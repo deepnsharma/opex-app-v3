@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Slider } from '../components/ui/slider';
 import { Calendar, CalendarIcon, Upload, X, FileText, Save, Send } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import { initiativeAPI } from '../services/api';
 
 const InitiativeForm = () => {
   const navigate = useNavigate();
@@ -69,31 +70,44 @@ const InitiativeForm = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
     const initiativeData = {
-      ...formData,
-      confidence: formData.confidence[0],
-      attachments: files.map(f => f.name),
-      status: action === 'submit' ? 'Submitted' : 'Draft',
-      dateCreated: new Date().toISOString().split('T')[0],
-      id: 'INI-' + String(Math.floor(Math.random() * 1000)).padStart(3, '0')
+      title: formData.title,
+      description: formData.description,
+      category: 'Operational Excellence', // Default category
+      site: formData.site,
+      department: 'Operations', // Default department  
+      proposer: formData.initiator,
+      proposalDate: formData.date,
+      expectedClosureDate: formData.date, // You can add another field for this
+      estimatedSavings: parseFloat(formData.expectedValue) || 0,
+      status: action === 'submit' ? 'PROPOSED' : 'DRAFT',
+      priority: formData.confidence[0] > 80 ? 'HIGH' : formData.confidence[0] > 60 ? 'MEDIUM' : 'LOW',
+      comments: `Baseline: ${formData.baselineData}. Target: ${formData.targetOutcome}. Confidence: ${formData.confidence[0]}%`
     };
 
-    console.log('Initiative Data:', initiativeData);
+    try {
+      // Call the actual API
+      const response = await initiativeAPI.create(initiativeData);
+      console.log('API Response:', response);
 
-    toast({
-      title: action === 'submit' ? "Initiative Submitted!" : "Draft Saved!",
-      description: action === 'submit' 
-        ? "Your initiative has been submitted for review."
-        : "Your initiative has been saved as draft.",
-    });
+      toast({
+        title: action === 'submit' ? "Initiative Submitted!" : "Draft Saved!",
+        description: "Your initiative has been successfully saved to the server.",
+      });
 
-    setLoading(false);
-    
-    if (action === 'submit') {
-      navigate('/workflow');
+      if (action === 'submit') {
+        navigate('/workflow');
+      }
+
+    } catch (error) {
+      console.error("API Error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save the initiative. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

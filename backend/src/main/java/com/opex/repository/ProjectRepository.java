@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     Optional<Project> findByProjectId(String projectId);
-    List<Project> findByInitiativeId(Long initiativeId);
+    List<Project> findByInitiative_Id(Long initiativeId);
 }

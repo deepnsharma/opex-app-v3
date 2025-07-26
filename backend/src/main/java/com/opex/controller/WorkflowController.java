@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -28,22 +28,22 @@ public class WorkflowController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<WorkflowStep> getWorkflowStepById(@PathVariable Long id) {
-        Optional<WorkflowStep> step = workflowService.findById(id);
-        return step.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<WorkflowStep> getWorkflowById(@PathVariable Long id) {
+        Optional<WorkflowStep> workflow = workflowService.findById(id);
+        return workflow.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{stepId}/approve")
     public ResponseEntity<WorkflowStep> approveStep(
             @PathVariable Long stepId, 
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> requestData) {
         
-        String comments = request.get("comments");
-        String signature = request.get("signature");
+        String comments = requestData.get("comments");
+        String signature = requestData.get("signature");
         
-        WorkflowStep approved = workflowService.approveStep(stepId, comments, signature);
-        if (approved != null) {
-            return ResponseEntity.ok(approved);
+        WorkflowStep approvedStep = workflowService.approveStep(stepId, comments, signature);
+        if (approvedStep != null) {
+            return ResponseEntity.ok(approvedStep);
         }
         return ResponseEntity.notFound().build();
     }
@@ -51,13 +51,13 @@ public class WorkflowController {
     @PostMapping("/{stepId}/reject")
     public ResponseEntity<WorkflowStep> rejectStep(
             @PathVariable Long stepId, 
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> requestData) {
         
-        String comments = request.get("comments");
+        String comments = requestData.get("comments");
         
-        WorkflowStep rejected = workflowService.rejectStep(stepId, comments);
-        if (rejected != null) {
-            return ResponseEntity.ok(rejected);
+        WorkflowStep rejectedStep = workflowService.rejectStep(stepId, comments);
+        if (rejectedStep != null) {
+            return ResponseEntity.ok(rejectedStep);
         }
         return ResponseEntity.notFound().build();
     }
@@ -67,8 +67,8 @@ public class WorkflowController {
             @PathVariable Long id, 
             @RequestBody WorkflowStep workflowStep) {
         
-        Optional<WorkflowStep> existing = workflowService.findById(id);
-        if (existing.isPresent()) {
+        Optional<WorkflowStep> existingStep = workflowService.findById(id);
+        if (existingStep.isPresent()) {
             workflowStep.setId(id);
             WorkflowStep updated = workflowService.save(workflowStep);
             return ResponseEntity.ok(updated);

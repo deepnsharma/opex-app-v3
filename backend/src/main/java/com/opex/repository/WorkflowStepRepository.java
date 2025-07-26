@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface WorkflowStepRepository extends JpaRepository<WorkflowStep, Long> {
-    List<WorkflowStep> findByInitiativeIdOrderByCreatedAtAsc(Long initiativeId);
+    List<WorkflowStep> findByInitiative_IdOrderByCreatedAtAsc(Long initiativeId);
     List<WorkflowStep> findByStatus(String status);
 }

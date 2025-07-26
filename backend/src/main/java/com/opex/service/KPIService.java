@@ -5,7 +5,6 @@ import com.opex.repository.KPIRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,14 +15,18 @@ public class KPIService {
     private KPIRepository kpiRepository;
 
     public List<KPI> findAll() {
-        return kpiRepository.findAllByOrderByMonthDesc();
+        return kpiRepository.findAll();
+    }
+
+    public Optional<KPI> findById(Long id) {
+        return kpiRepository.findById(id);
     }
 
     public List<KPI> findBySite(String site) {
-        return kpiRepository.findBySiteOrderByMonthDesc(site);
+        return kpiRepository.findBySite(site);
     }
 
-    public Optional<KPI> findByMonthAndSite(YearMonth month, String site) {
+    public List<KPI> findByMonthAndSite(String month, String site) {
         return kpiRepository.findByMonthAndSite(month, site);
     }
 
@@ -32,21 +35,17 @@ public class KPIService {
         return kpiRepository.save(kpi);
     }
 
-    public Double getTotalCostSavings() {
-        Double total = kpiRepository.getTotalCostSavings();
+    public void delete(Long id) {
+        kpiRepository.deleteById(id);
+    }
+
+    public Double getTotalActualValue() {
+        Double total = kpiRepository.getTotalActualValue();
         return total != null ? total : 0.0;
     }
 
-    public Double getAverageProductivityGain() {
-        Double avg = kpiRepository.getAverageProductivityGain();
+    public Double getAverageActualValue() {
+        Double avg = kpiRepository.getAverageActualValue();
         return avg != null ? avg : 0.0;
-    }
-
-    public Optional<KPI> findById(Long id) {
-        return kpiRepository.findById(id);
-    }
-
-    public void delete(Long id) {
-        kpiRepository.deleteById(id);
     }
 }

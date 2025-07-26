@@ -1,9 +1,7 @@
 package com.opex.controller;
 
 import com.opex.model.Initiative;
-import com.opex.model.User;
 import com.opex.service.InitiativeService;
-import com.opex.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +15,6 @@ public class InitiativeController {
 
     @Autowired
     private InitiativeService initiativeService;
-
-    @Autowired
-    private UserService userService;
 
     @GetMapping
     public List<Initiative> getAllInitiatives() {
@@ -41,12 +36,6 @@ public class InitiativeController {
     @PostMapping
     public ResponseEntity<Initiative> createInitiative(@RequestBody Initiative initiative) {
         try {
-            // For demo purposes, set a default user if not provided
-            if (initiative.getUser() == null) {
-                Optional<User> userOpt = userService.findByEmail("demo@opex.com");
-                userOpt.ifPresent(initiative::setUser);
-            }
-            
             Initiative savedInitiative = initiativeService.save(initiative);
             return ResponseEntity.ok(savedInitiative);
         } catch (Exception e) {

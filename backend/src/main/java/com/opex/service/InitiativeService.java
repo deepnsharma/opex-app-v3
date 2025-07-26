@@ -41,7 +41,7 @@ public class InitiativeService {
         Initiative saved = initiativeRepository.save(initiative);
         
         // Create initial workflow steps
-        if (saved.getId() != null && workflowStepRepository.findByInitiativeIdOrderByCreatedAtAsc(saved.getId()).isEmpty()) {
+        if (saved.getId() != null && workflowStepRepository.findByInitiative_IdOrderByCreatedAtAsc(saved.getId()).isEmpty()) {
             createInitialWorkflowSteps(saved);
         }
         

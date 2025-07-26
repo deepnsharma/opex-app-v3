@@ -1,8 +1,8 @@
 package com.opex.model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "kpis")
@@ -11,62 +11,77 @@ public class KPI {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private YearMonth month;
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String category;
+
+    @Column(nullable = false)
     private String site;
 
-    private Double energySavings;
-    private Double costSavings;
-    private Double productivityGain;
-    private Double wasteReduction;
-    private Double co2Reduction;
-    private Double cycleTimeReduction;
+    @Column(nullable = false)
+    private String month;
 
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal targetValue;
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal actualValue;
+
+    @Column(nullable = false)
+    private String unit;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     public KPI() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public YearMonth getMonth() { return month; }
-    public void setMonth(YearMonth month) { this.month = month; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public String getSite() { return site; }
     public void setSite(String site) { this.site = site; }
 
-    public Double getEnergySavings() { return energySavings; }
-    public void setEnergySavings(Double energySavings) { this.energySavings = energySavings; }
+    public String getMonth() { return month; }
+    public void setMonth(String month) { this.month = month; }
 
-    public Double getCostSavings() { return costSavings; }
-    public void setCostSavings(Double costSavings) { this.costSavings = costSavings; }
+    public BigDecimal getTargetValue() { return targetValue; }
+    public void setTargetValue(BigDecimal targetValue) { this.targetValue = targetValue; }
 
-    public Double getProductivityGain() { return productivityGain; }
-    public void setProductivityGain(Double productivityGain) { this.productivityGain = productivityGain; }
+    public BigDecimal getActualValue() { return actualValue; }
+    public void setActualValue(BigDecimal actualValue) { this.actualValue = actualValue; }
 
-    public Double getWasteReduction() { return wasteReduction; }
-    public void setWasteReduction(Double wasteReduction) { this.wasteReduction = wasteReduction; }
+    public String getUnit() { return unit; }
+    public void setUnit(String unit) { this.unit = unit; }
 
-    public Double getCo2Reduction() { return co2Reduction; }
-    public void setCo2Reduction(Double co2Reduction) { this.co2Reduction = co2Reduction; }
-
-    public Double getCycleTimeReduction() { return cycleTimeReduction; }
-    public void setCycleTimeReduction(Double cycleTimeReduction) { this.cycleTimeReduction = cycleTimeReduction; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
 }

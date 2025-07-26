@@ -1,11 +1,11 @@
 package com.opex.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "initiatives")
@@ -14,57 +14,69 @@ public class Initiative {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     @Column(unique = true)
     private String initiativeId;
 
     @NotBlank
     private String title;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @NotBlank
-    private String initiator;
+    private String category;
 
     @NotBlank
     private String site;
 
+    @NotBlank
+    private String department;
+
+    @NotBlank
+    private String proposer;
+
     @NotNull
-    private LocalDate date;
+    private LocalDate proposalDate;
 
-    @Column(length = 2000)
-    private String description;
+    @NotNull
+    private LocalDate expectedClosureDate;
 
-    @Column(length = 1000)
-    private String baselineData;
+    private LocalDate actualClosureDate;
 
-    @Column(length = 1000)
-    private String targetOutcome;
+    @NotNull
+    @Column(precision = 15, scale = 2)
+    private BigDecimal estimatedSavings;
 
-    private Double expectedValue;
-    private Integer confidence;
-    private Double estimatedCapex;
+    @Column(precision = 15, scale = 2)
+    private BigDecimal actualSavings;
 
-    private String status = "Draft";
-    private String stage = "Initiated";
-    private Integer currentStage = 1;
+    @NotBlank
+    private String status; // PROPOSED, APPROVED, IN_PROGRESS, COMPLETED, REJECTED
 
-    @ElementCollection
-    private List<String> assumptions;
+    @NotBlank
+    private String priority; // HIGH, MEDIUM, LOW
 
-    @ElementCollection
-    private List<String> attachments;
+    @Column(columnDefinition = "TEXT")
+    private String comments;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     public Initiative() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -74,54 +86,48 @@ public class Initiative {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    public String getInitiator() { return initiator; }
-    public void setInitiator(String initiator) { this.initiator = initiator; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public String getSite() { return site; }
     public void setSite(String site) { this.site = site; }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getProposer() { return proposer; }
+    public void setProposer(String proposer) { this.proposer = proposer; }
 
-    public String getBaselineData() { return baselineData; }
-    public void setBaselineData(String baselineData) { this.baselineData = baselineData; }
+    public LocalDate getProposalDate() { return proposalDate; }
+    public void setProposalDate(LocalDate proposalDate) { this.proposalDate = proposalDate; }
 
-    public String getTargetOutcome() { return targetOutcome; }
-    public void setTargetOutcome(String targetOutcome) { this.targetOutcome = targetOutcome; }
+    public LocalDate getExpectedClosureDate() { return expectedClosureDate; }
+    public void setExpectedClosureDate(LocalDate expectedClosureDate) { this.expectedClosureDate = expectedClosureDate; }
 
-    public Double getExpectedValue() { return expectedValue; }
-    public void setExpectedValue(Double expectedValue) { this.expectedValue = expectedValue; }
+    public LocalDate getActualClosureDate() { return actualClosureDate; }
+    public void setActualClosureDate(LocalDate actualClosureDate) { this.actualClosureDate = actualClosureDate; }
 
-    public Integer getConfidence() { return confidence; }
-    public void setConfidence(Integer confidence) { this.confidence = confidence; }
+    public BigDecimal getEstimatedSavings() { return estimatedSavings; }
+    public void setEstimatedSavings(BigDecimal estimatedSavings) { this.estimatedSavings = estimatedSavings; }
 
-    public Double getEstimatedCapex() { return estimatedCapex; }
-    public void setEstimatedCapex(Double estimatedCapex) { this.estimatedCapex = estimatedCapex; }
+    public BigDecimal getActualSavings() { return actualSavings; }
+    public void setActualSavings(BigDecimal actualSavings) { this.actualSavings = actualSavings; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public String getStage() { return stage; }
-    public void setStage(String stage) { this.stage = stage; }
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 
-    public Integer getCurrentStage() { return currentStage; }
-    public void setCurrentStage(Integer currentStage) { this.currentStage = currentStage; }
-
-    public List<String> getAssumptions() { return assumptions; }
-    public void setAssumptions(List<String> assumptions) { this.assumptions = assumptions; }
-
-    public List<String> getAttachments() { return attachments; }
-    public void setAttachments(List<String> attachments) { this.attachments = attachments; }
+    public String getComments() { return comments; }
+    public void setComments(String comments) { this.comments = comments; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
 }

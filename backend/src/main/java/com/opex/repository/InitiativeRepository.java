@@ -12,11 +12,10 @@ public interface InitiativeRepository extends JpaRepository<Initiative, Long> {
     Optional<Initiative> findByInitiativeId(String initiativeId);
     List<Initiative> findBySite(String site);
     List<Initiative> findByStatus(String status);
-    List<Initiative> findByUserId(Long userId);
     
     @Query("SELECT COUNT(i) FROM Initiative i WHERE i.status = ?1")
     Long countByStatus(String status);
     
-    @Query("SELECT SUM(i.expectedValue) FROM Initiative i WHERE i.status = 'Approved'")
+    @Query("SELECT SUM(i.estimatedSavings) FROM Initiative i WHERE i.status = 'APPROVED'")
     Double getTotalExpectedValue();
 }

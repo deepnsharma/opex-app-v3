@@ -32,7 +32,7 @@ public class ProjectService {
     }
 
     public List<Project> findByInitiativeId(Long initiativeId) {
-        return projectRepository.findByInitiativeId(initiativeId);
+        return projectRepository.findByInitiative_Id(initiativeId);
     }
 
     public Project save(Project project) {
@@ -43,31 +43,32 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
+    public void deleteProject(Long id) {
+        projectRepository.deleteById(id);
+    }
+
+    // Task methods
     public List<Task> findTasksByProjectId(Long projectId) {
-        return taskRepository.findByProjectId(projectId);
+        return taskRepository.findByProject_Id(projectId);
+    }
+
+    public Optional<Task> findTaskById(Long taskId) {
+        return taskRepository.findById(taskId);
     }
 
     public Task saveTask(Task task) {
         if (task.getTaskId() == null) {
-            task.setTaskId("T" + String.format("%03d", (int)(Math.random() * 1000)));
+            task.setTaskId("TSK-" + String.format("%03d", (int)(Math.random() * 1000)));
         }
         task.setUpdatedAt(LocalDateTime.now());
         return taskRepository.save(task);
     }
 
-    public Optional<Task> findTaskById(Long id) {
-        return taskRepository.findById(id);
+    public void deleteTask(Long taskId) {
+        taskRepository.deleteById(taskId);
     }
 
     public Long countTasksByStatus(String status) {
         return taskRepository.countByStatus(status);
-    }
-
-    public void deleteProject(Long id) {
-        projectRepository.deleteById(id);
-    }
-
-    public void deleteTask(Long id) {
-        taskRepository.deleteById(id);
     }
 }

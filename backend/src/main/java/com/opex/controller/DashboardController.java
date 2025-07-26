@@ -29,19 +29,18 @@ public class DashboardController {
         
         // Initiative statistics
         Long totalInitiatives = (long) initiativeService.findAll().size();
-        Long approvedInitiatives = initiativeService.countByStatus("Approved");
-        Long pendingInitiatives = initiativeService.countByStatus("Pending");
-        Long inProgressInitiatives = initiativeService.countByStatus("In Progress");
+        Long approvedInitiatives = initiativeService.countByStatus("APPROVED");
+        Long pendingInitiatives = initiativeService.countByStatus("PROPOSED");
+        Long inProgressInitiatives = initiativeService.countByStatus("IN_PROGRESS");
         
         // Financial statistics
-        Double totalSavings = kpiService.getTotalCostSavings();
+        Double totalSavings = kpiService.getTotalActualValue();
         Double expectedValue = initiativeService.getTotalExpectedValue();
-        Double avgProductivity = kpiService.getAverageProductivityGain();
         
         // Task statistics
-        Long completedTasks = projectService.countTasksByStatus("Completed");
-        Long inProgressTasks = projectService.countTasksByStatus("In Progress");
-        Long plannedTasks = projectService.countTasksByStatus("Planning");
+        Long completedTasks = projectService.countTasksByStatus("COMPLETED");
+        Long inProgressTasks = projectService.countTasksByStatus("IN_PROGRESS");
+        Long plannedTasks = projectService.countTasksByStatus("PLANNING");
         
         // Calculate completion rate
         double completionRate = totalInitiatives > 0 ? 
@@ -51,9 +50,8 @@ public class DashboardController {
         stats.put("approvedInitiatives", approvedInitiatives);
         stats.put("pendingInitiatives", pendingInitiatives);
         stats.put("inProgressInitiatives", inProgressInitiatives);
-        stats.put("totalSavings", totalSavings);
-        stats.put("expectedValue", expectedValue);
-        stats.put("avgProductivity", avgProductivity);
+        stats.put("totalSavings", totalSavings != null ? totalSavings : 0.0);
+        stats.put("expectedValue", expectedValue != null ? expectedValue : 0.0);
         stats.put("completedTasks", completedTasks);
         stats.put("inProgressTasks", inProgressTasks);
         stats.put("plannedTasks", plannedTasks);

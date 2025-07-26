@@ -15,7 +15,7 @@ public class WorkflowService {
     private WorkflowStepRepository workflowStepRepository;
 
     public List<WorkflowStep> findByInitiativeId(Long initiativeId) {
-        return workflowStepRepository.findByInitiativeIdOrderByCreatedAtAsc(initiativeId);
+        return workflowStepRepository.findByInitiative_IdOrderByCreatedAtAsc(initiativeId);
     }
 
     public List<WorkflowStep> findByStatus(String status) {
