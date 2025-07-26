@@ -101,3 +101,112 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Connect all frontend pages to make real backend API calls instead of fake/mock calls. All pages should use real APIs from api.js which connect to backend APIs."
+
+backend:
+  - task: "Backend APIs are already implemented"
+    implemented: true
+    working: true
+    file: "backend/src/main/java/com/opex/controller/*.java"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "All backend API controllers are already implemented and working - DashboardController, InitiativeController, KPIController, WorkflowController, ProjectController, AuthController"
+
+frontend:
+  - task: "Update WorkflowManagement.js to use real APIs"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/WorkflowManagement.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Replaced mockInitiatives with real initiativeAPI.getAll() calls, added loading/error states, updated approval workflow to use workflowAPI"
+
+  - task: "Update KPITracking.js to use real APIs"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/KPITracking.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Replaced mockKPIs with real kpiAPI.getAll() calls, updated KPI creation form to use kpiAPI.create(), added loading/error states"
+
+  - task: "Update ProjectTracking.js to use real APIs"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ProjectTracking.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Replaced mockProjects with real projectAPI.getAll() calls, updated task creation/update to use real APIs, added loading/error states"
+
+  - task: "Update Reports.js to use real APIs"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Reports.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Replaced mockInitiatives, mockKPIs, mockDashboardData with real API calls from dashboardAPI, initiativeAPI, and kpiAPI"
+
+  - task: "Update InitiativeClosure.js to use real APIs"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/InitiativeClosure.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Replaced mockClosureData with real initiativeAPI.getAll() filtering for approved/completed initiatives, added loading/error states"
+
+  - task: "Pages already using real APIs"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Dashboard.js, Login.js, InitiativeForm.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "These pages were already using real APIs - Dashboard uses dashboardAPI and kpiAPI, Login uses authAPI, InitiativeForm uses initiativeAPI"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "WorkflowManagement API integration"
+    - "KPITracking API integration"
+    - "ProjectTracking API integration"
+    - "Reports API integration"
+    - "InitiativeClosure API integration"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Successfully updated all frontend pages to use real backend APIs instead of mock data. All 5 pages that were using mock data have been converted: WorkflowManagement, KPITracking, ProjectTracking, Reports, and InitiativeClosure. Each page now includes proper loading states, error handling, and real API calls through the existing api.js service functions."

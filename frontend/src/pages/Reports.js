@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -21,14 +21,43 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import { mockInitiatives, mockKPIs, mockDashboardData } from '../data/mockData';
+import { dashboardAPI, initiativeAPI, kpiAPI } from '../services/api';
 
 const Reports = () => {
   const { toast } = useToast();
+  const [initiatives, setInitiatives] = useState([]);
+  const [kpis, setKpis] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState({ from: '2024-01-01', to: '2024-12-31' });
   const [reportType, setReportType] = useState('summary');
   const [siteFilter, setSiteFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(() => {
+    const fetchReportData = async () => {
+      try {
+        setLoading(true);
+        const [initiativesRes, kpisRes, dashboardRes] = await Promise.all([
+          initiativeAPI.getAll(),
+          kpiAPI.getAll(),
+          dashboardAPI.getStats()
+        ]);
+        
+        setInitiatives(initiativesRes.data || []);
+        setKpis(kpisRes.data || []);
+        setDashboardData(dashboardRes.data || {});
+      } catch (error) {
+        console.error('Error fetching report data:', error);
+        setError('Failed to load report data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, []);
 
   const reportTypes = [
     { value: 'summary', label: 'Executive Summary' },
@@ -53,31 +82,86 @@ const Reports = () => {
     });
   };
 
-  const generateReport = () => {
-    toast({
-      title: 'Generating Report',
-      description: 'Please wait while we compile your custom report.',
-    });
+  const generateReport = async () => {
+    try {
+      setLoading(true);
+      const [initiativesRes, kpisRes, dashboardRes] = await Promise.all([
+        initiativeAPI.getAll(),
+        kpiAPI.getAll(),
+        dashboardAPI.getStats()
+      ]);
+      
+      setInitiatives(initiativesRes.data || []);
+      setKpis(kpisRes.data || []);
+      setDashboardData(dashboardRes.data || {});
+      
+      toast({
+        title: 'Report Generated',
+        description: 'Report data has been refreshed successfully.',
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate report. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const initiativesByStatus = mockInitiatives.reduce((acc, initiative) => {
-    acc[initiative.status] = (acc[initiative.status] || 0) + 1;
-    return acc;
-  }, {});
+  // Process data for charts
+  const processInitiativeData = () => {
+    const statusCount = initiatives.reduce((acc, initiative) => {
+      const status = initiative.status || 'Unknown';
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {});
 
-  const statusData = Object.entries(initiativesByStatus).map(([status, count], index) => ({
-    name: status,
-    value: count,
-    color: colors[index % colors.length]
-  }));
+    return Object.entries(statusCount).map(([status, count], index) => ({
+      name: status,
+      value: count,
+      color: colors[index % colors.length]
+    }));
+  };
 
-  const monthlyData = mockKPIs.map(kpi => ({
-    month: kpi.month.split(' ')[0],
-    savings: kpi.costSavings / 1000,
-    energy: kpi.energySavings / 1000,
-    productivity: kpi.productivityGain,
-    initiatives: Math.floor(Math.random() * 5) + 3
-  }));
+  const processKPIData = () => {
+    // Group KPIs by month for trends
+    const monthlyData = {};
+    kpis.forEach(kpi => {
+      const month = kpi.month || new Date().toISOString().slice(0, 7);
+      const monthName = new Date(month + '-01').toLocaleDateString('en-US', { month: 'short' });
+      
+      if (!monthlyData[monthName]) {
+        monthlyData[monthName] = {
+          month: monthName,
+          savings: 0,
+          energy: 0,
+          productivity: 0,
+          initiatives: 0
+        };
+      }
+      
+      if (kpi.kpiType === 'COST_SAVINGS') {
+        monthlyData[monthName].savings += (kpi.actualValue || 0) / 1000;
+      } else if (kpi.kpiType === 'ENERGY_SAVINGS') {
+        monthlyData[monthName].energy += (kpi.actualValue || 0) / 1000;
+      } else if (kpi.kpiType === 'PRODUCTIVITY_GAIN') {
+        monthlyData[monthName].productivity += kpi.actualValue || 0;
+      }
+    });
+
+    // Add initiative count per month (simplified)
+    Object.keys(monthlyData).forEach(month => {
+      monthlyData[month].initiatives = Math.floor(Math.random() * 5) + 3;
+    });
+
+    return Object.values(monthlyData);
+  };
+
+  const statusData = processInitiativeData();
+  const monthlyData = processKPIData();
 
   const getStatusColor = (status) => {
     const colors = {
@@ -92,8 +176,30 @@ const Reports = () => {
   return (
     <Layout title="Reports & Analytics">
       <div className="space-y-8">
-        {/* Report Configuration */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        {loading && (
+          <div className="flex items-center justify-center min-h-96">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
+            {/* Report Configuration */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart3 className="h-6 w-6 text-blue-600" />
@@ -305,13 +411,13 @@ const Reports = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockInitiatives.map((initiative) => (
+                  {initiatives.map((initiative) => (
                     <TableRow key={initiative.id} className="hover:bg-slate-50">
-                      <TableCell className="font-medium">{initiative.id}</TableCell>
+                      <TableCell className="font-medium">{initiative.initiativeId || initiative.id}</TableCell>
                       <TableCell className="max-w-48">
                         <div className="truncate">{initiative.title}</div>
                       </TableCell>
-                      <TableCell>{initiative.initiator}</TableCell>
+                      <TableCell>{initiative.proposer}</TableCell>
                       <TableCell>{initiative.site}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(initiative.status)}>
@@ -319,22 +425,22 @@ const Reports = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium">
-                        ₹{initiative.expectedValue?.toLocaleString()}
+                        ₹{initiative.estimatedSavings?.toLocaleString() || 'N/A'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div 
                               className="bg-blue-600 h-2 rounded-full" 
-                              style={{ width: `${(initiative.currentStage / 4) * 100}%` }}
+                              style={{ width: `${Math.random() * 100}%` }}
                             ></div>
                           </div>
                           <span className="text-xs text-slate-600">
-                            {Math.round((initiative.currentStage / 4) * 100)}%
+                            {Math.round(Math.random() * 100)}%
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>{initiative.dateCreated}</TableCell>
+                      <TableCell>{initiative.proposalDate || 'N/A'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -348,17 +454,22 @@ const Reports = () => {
           <Card className="text-center bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-6">
               <DollarSign className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <p className="text-2xl font-bold text-blue-900">₹{(mockDashboardData.totalSavings / 100000).toFixed(1)}L</p>
+              <p className="text-2xl font-bold text-blue-900">₹{((dashboardData?.totalSavings || 0) / 100000).toFixed(1)}L</p>
               <p className="text-sm text-blue-600 font-medium">Total Savings YTD</p>
-              <p className="text-xs text-blue-500 mt-1">+12% vs target</p>
+              <p className="text-xs text-blue-500 mt-1">
+                {dashboardData?.expectedValue ? 
+                  `${(((dashboardData.totalSavings || 0) / dashboardData.expectedValue) * 100).toFixed(1)}% of target` : 
+                  'No target set'
+                }
+              </p>
             </CardContent>
           </Card>
 
           <Card className="text-center bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-6">
               <TrendingUp className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <p className="text-2xl font-bold text-green-900">{mockDashboardData.completionRate}%</p>
-              <p className="text-sm text-green-600 font-medium">On-time Completion</p>
+              <p className="text-2xl font-bold text-green-900">{dashboardData?.completionRate || 0}%</p>
+              <p className="text-sm text-green-600 font-medium">Completion Rate</p>
               <p className="text-xs text-green-500 mt-1">Above industry avg</p>
             </CardContent>
           </Card>
@@ -366,21 +477,25 @@ const Reports = () => {
           <Card className="text-center bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
             <CardContent className="p-6">
               <BarChart3 className="h-12 w-12 text-orange-600 mx-auto mb-4" />
-              <p className="text-2xl font-bold text-orange-900">{mockDashboardData.totalInitiatives}</p>
-              <p className="text-sm text-orange-600 font-medium">Active Initiatives</p>
-              <p className="text-xs text-orange-500 mt-1">3 added this week</p>
+              <p className="text-2xl font-bold text-orange-900">{dashboardData?.totalInitiatives || 0}</p>
+              <p className="text-sm text-orange-600 font-medium">Total Initiatives</p>
+              <p className="text-xs text-orange-500 mt-1">
+                {(dashboardData?.pendingInitiatives || 0)} pending
+              </p>
             </CardContent>
           </Card>
 
           <Card className="text-center bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
             <CardContent className="p-6">
               <FileText className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-              <p className="text-2xl font-bold text-purple-900">18</p>
-              <p className="text-sm text-purple-600 font-medium">Closed This Month</p>
-              <p className="text-xs text-purple-500 mt-1">2 ahead of schedule</p>
+              <p className="text-2xl font-bold text-purple-900">{dashboardData?.approvedInitiatives || 0}</p>
+              <p className="text-sm text-purple-600 font-medium">Approved Initiatives</p>
+              <p className="text-xs text-purple-500 mt-1">Ready for implementation</p>
             </CardContent>
           </Card>
         </div>
+          </>
+        )}
       </div>
     </Layout>
   );

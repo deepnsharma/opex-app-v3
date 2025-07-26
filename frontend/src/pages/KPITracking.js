@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -21,21 +21,39 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import { mockKPIs } from '../data/mockData';
+import { kpiAPI } from '../services/api';
 
 const KPITracking = () => {
   const { toast } = useToast();
+  const [kpis, setKpis] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedMetric, setSelectedMetric] = useState('costSavings');
   const [filterStatus, setFilterStatus] = useState('all');
   const [newKPI, setNewKPI] = useState({
     month: '',
-    energySavings: '',
-    costSavings: '',
-    productivityGain: '',
-    wasteReduction: '',
-    co2Reduction: '',
-    cycleTimeReduction: ''
+    site: '',
+    actualValue: '',
+    targetValue: '',
+    kpiType: 'COST_SAVINGS'
   });
+
+  useEffect(() => {
+    const fetchKPIs = async () => {
+      try {
+        setLoading(true);
+        const response = await kpiAPI.getAll();
+        setKpis(response.data || []);
+      } catch (error) {
+        console.error('Error fetching KPIs:', error);
+        setError('Failed to load KPI data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKPIs();
+  }, []);
 
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
@@ -58,22 +76,42 @@ const KPITracking = () => {
     { key: 'cycleTimeReduction', label: 'Cycle Time Reduction', icon: Clock, color: '#EF4444', unit: '%' }
   ];
 
-  const handleKPISubmit = () => {
-    console.log('Adding new KPI data:', newKPI);
-    toast({
-      title: 'KPI Data Added',
-      description: 'Monthly KPI data has been successfully recorded.',
-    });
-    
-    setNewKPI({
-      month: '',
-      energySavings: '',
-      costSavings: '',
-      productivityGain: '',
-      wasteReduction: '',
-      co2Reduction: '',
-      cycleTimeReduction: ''
-    });
+  const handleKPISubmit = async () => {
+    try {
+      const kpiData = {
+        month: newKPI.month,
+        site: newKPI.site,
+        actualValue: parseFloat(newKPI.actualValue) || 0,
+        targetValue: parseFloat(newKPI.targetValue) || 0,
+        kpiType: newKPI.kpiType
+      };
+
+      await kpiAPI.create(kpiData);
+      
+      toast({
+        title: 'KPI Data Added',
+        description: 'Monthly KPI data has been successfully recorded.',
+      });
+      
+      // Refresh KPI data
+      const response = await kpiAPI.getAll();
+      setKpis(response.data || []);
+      
+      setNewKPI({
+        month: '',
+        site: '',
+        actualValue: '',
+        targetValue: '',
+        kpiType: 'COST_SAVINGS'
+      });
+    } catch (error) {
+      console.error('Error adding KPI:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add KPI data. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const exportData = (format) => {
@@ -83,55 +121,110 @@ const KPITracking = () => {
     });
   };
 
-  const chartData = mockKPIs.map(kpi => ({
-    ...kpi,
-    month: kpi.month.split(' ')[0],
-    costSavings: kpi.costSavings / 1000,
-    energySavings: kpi.energySavings / 1000
-  }));
+  // Process KPI data for charts - handle different data structures
+  const processChartData = () => {
+    if (!kpis || kpis.length === 0) return [];
+    
+    // Group KPIs by month for chart display
+    const monthlyData = {};
+    kpis.forEach(kpi => {
+      const month = kpi.month || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+      if (!monthlyData[month]) {
+        monthlyData[month] = {
+          month: month.split('-')[1] || month,
+          costSavings: 0,
+          energySavings: 0,
+          productivity: 0
+        };
+      }
+      
+      // Map based on KPI type
+      if (kpi.kpiType === 'COST_SAVINGS') {
+        monthlyData[month].costSavings += kpi.actualValue || 0;
+      } else if (kpi.kpiType === 'ENERGY_SAVINGS') {
+        monthlyData[month].energySavings += kpi.actualValue || 0;
+      } else if (kpi.kpiType === 'PRODUCTIVITY_GAIN') {
+        monthlyData[month].productivity += kpi.actualValue || 0;
+      }
+    });
+
+    return Object.values(monthlyData).map(data => ({
+      ...data,
+      costSavings: data.costSavings / 1000, // Convert to K
+      energySavings: data.energySavings / 1000
+    }));
+  };
+
+  const chartData = processChartData();
 
   const selectedMetricData = kpiMetrics.find(m => m.key === selectedMetric);
 
   return (
     <Layout title="KPI Tracking & Monthly Monitoring">
       <div className="space-y-8">
-        {/* KPI Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {kpiMetrics.map((metric) => {
-            const Icon = metric.icon;
-            const latestValue = mockKPIs[mockKPIs.length - 1][metric.key];
-            const previousValue = mockKPIs[mockKPIs.length - 2]?.[metric.key] || 0;
-            const change = latestValue - previousValue;
-            const changePercent = previousValue ? ((change / previousValue) * 100).toFixed(1) : 0;
+        {loading && (
+          <div className="flex items-center justify-center min-h-96">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        )}
 
-            return (
-              <Card key={metric.key} className="hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02]">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="h-12 w-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${metric.color}20` }}>
-                      <Icon className="h-6 w-6" style={{ color: metric.color }} />
-                    </div>
-                    <Badge className={change >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                      {change >= 0 ? '+' : ''}{changePercent}%
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-600 mb-1">{metric.label}</p>
-                    <p className="text-2xl font-bold" style={{ color: metric.color }}>
-                      {metric.key === 'costSavings' || metric.key === 'energySavings' 
-                        ? (latestValue / 1000).toFixed(1) 
-                        : latestValue.toFixed(1)
-                      } {metric.unit}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      vs last month: {change >= 0 ? '+' : ''}{change.toFixed(1)} {metric.unit}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {error && (
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
+            {/* KPI Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {kpiMetrics.map((metric) => {
+                const Icon = metric.icon;
+                // Calculate latest values from real KPI data
+                const relevantKPIs = kpis.filter(kpi => kpi.kpiType === metric.key.toUpperCase());
+                const latestValue = relevantKPIs.length > 0 ? 
+                  relevantKPIs[relevantKPIs.length - 1]?.actualValue || 0 : 0;
+                const previousValue = relevantKPIs.length > 1 ? 
+                  relevantKPIs[relevantKPIs.length - 2]?.actualValue || 0 : 0;
+                const change = latestValue - previousValue;
+                const changePercent = previousValue ? ((change / previousValue) * 100).toFixed(1) : 0;
+
+                return (
+                  <Card key={metric.key} className="hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-[1.02]">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="h-12 w-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${metric.color}20` }}>
+                          <Icon className="h-6 w-6" style={{ color: metric.color }} />
+                        </div>
+                        <Badge className={change >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                          {change >= 0 ? '+' : ''}{changePercent}%
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-600 mb-1">{metric.label}</p>
+                        <p className="text-2xl font-bold" style={{ color: metric.color }}>
+                          {metric.key === 'costSavings' || metric.key === 'energySavings' 
+                            ? (latestValue / 1000).toFixed(1) 
+                            : latestValue.toFixed(1)
+                          } {metric.unit}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          vs last period: {change >= 0 ? '+' : ''}{change.toFixed(1)} {metric.unit}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
 
         {/* Chart and Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -280,66 +373,66 @@ const KPITracking = () => {
                   <DialogHeader>
                     <DialogTitle>Add Monthly KPI Data</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Month</Label>
-                        <Input
-                          type="month"
-                          value={newKPI.month}
-                          onChange={(e) => setNewKPI({...newKPI, month: e.target.value})}
-                        />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Month</Label>
+                          <Input
+                            type="month"
+                            value={newKPI.month}
+                            onChange={(e) => setNewKPI({...newKPI, month: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label>Site</Label>
+                          <Select onValueChange={(value) => setNewKPI({...newKPI, site: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select site" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="plant-a">Plant A</SelectItem>
+                              <SelectItem value="plant-b">Plant B</SelectItem>
+                              <SelectItem value="plant-c">Plant C</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>KPI Type</Label>
+                          <Select onValueChange={(value) => setNewKPI({...newKPI, kpiType: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select KPI type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="COST_SAVINGS">Cost Savings</SelectItem>
+                              <SelectItem value="ENERGY_SAVINGS">Energy Savings</SelectItem>
+                              <SelectItem value="PRODUCTIVITY_GAIN">Productivity Gain</SelectItem>
+                              <SelectItem value="WASTE_REDUCTION">Waste Reduction</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Actual Value</Label>
+                          <Input
+                            type="number"
+                            value={newKPI.actualValue}
+                            onChange={(e) => setNewKPI({...newKPI, actualValue: e.target.value})}
+                            placeholder="Actual value achieved"
+                          />
+                        </div>
+                        <div>
+                          <Label>Target Value</Label>
+                          <Input
+                            type="number"
+                            value={newKPI.targetValue}
+                            onChange={(e) => setNewKPI({...newKPI, targetValue: e.target.value})}
+                            placeholder="Target value"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label>Cost Savings (₹)</Label>
-                        <Input
-                          type="number"
-                          value={newKPI.costSavings}
-                          onChange={(e) => setNewKPI({...newKPI, costSavings: e.target.value})}
-                          placeholder="Amount in rupees"
-                        />
-                      </div>
-                      <div>
-                        <Label>Energy Savings (MWh)</Label>
-                        <Input
-                          type="number"
-                          value={newKPI.energySavings}
-                          onChange={(e) => setNewKPI({...newKPI, energySavings: e.target.value})}
-                          placeholder="Energy saved"
-                        />
-                      </div>
-                      <div>
-                        <Label>Productivity Gain (%)</Label>
-                        <Input
-                          type="number"
-                          value={newKPI.productivityGain}
-                          onChange={(e) => setNewKPI({...newKPI, productivityGain: e.target.value})}
-                          placeholder="Percentage gain"
-                        />
-                      </div>
-                      <div>
-                        <Label>Waste Reduction (%)</Label>
-                        <Input
-                          type="number"
-                          value={newKPI.wasteReduction}
-                          onChange={(e) => setNewKPI({...newKPI, wasteReduction: e.target.value})}
-                          placeholder="Percentage reduction"
-                        />
-                      </div>
-                      <div>
-                        <Label>CO₂ Reduction (MT)</Label>
-                        <Input
-                          type="number"
-                          value={newKPI.co2Reduction}
-                          onChange={(e) => setNewKPI({...newKPI, co2Reduction: e.target.value})}
-                          placeholder="Metric tons"
-                        />
-                      </div>
+                      <Button onClick={handleKPISubmit} className="w-full" disabled={loading}>
+                        Add KPI Data
+                      </Button>
                     </div>
-                    <Button onClick={handleKPISubmit} className="w-full">
-                      Add KPI Data
-                    </Button>
-                  </div>
                 </DialogContent>
               </Dialog>
             </CardHeader>
@@ -390,13 +483,15 @@ const KPITracking = () => {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="productivityGain" fill="#10B981" name="Productivity %" />
-                <Bar dataKey="wasteReduction" fill="#8B5CF6" name="Waste Reduction %" />
-                <Bar dataKey="cycleTimeReduction" fill="#EF4444" name="Cycle Time %" />
+                <Bar dataKey="costSavings" fill="#3B82F6" name="Cost Savings (₹K)" />
+                <Bar dataKey="energySavings" fill="#10B981" name="Energy Savings (MWh)" />
+                <Bar dataKey="productivity" fill="#F59E0B" name="Productivity %" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
     </Layout>
   );

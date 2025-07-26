@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -24,69 +24,130 @@ import {
   Target
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import { mockProjects } from '../data/mockData';
+import { projectAPI } from '../services/api';
 
 const ProjectTracking = () => {
   const { toast } = useToast();
-  const [projects] = useState(mockProjects);
-  const [selectedProject, setSelectedProject] = useState(projects[0]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [newTask, setNewTask] = useState({
     name: '',
     startDate: '',
     endDate: '',
-    status: 'Planning',
+    status: 'PLANNING',
     progress: 0,
     owner: '',
     comments: ''
   });
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const response = await projectAPI.getAll();
+        setProjects(response.data || []);
+        if (response.data && response.data.length > 0) {
+          setSelectedProject(response.data[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setError('Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
   const statusColors = {
-    'Completed': 'bg-green-100 text-green-800 border-green-200',
-    'In Progress': 'bg-blue-100 text-blue-800 border-blue-200',
-    'Planning': 'bg-orange-100 text-orange-800 border-orange-200',
-    'On Hold': 'bg-gray-100 text-gray-800 border-gray-200'
+    'COMPLETED': 'bg-green-100 text-green-800 border-green-200',
+    'IN_PROGRESS': 'bg-blue-100 text-blue-800 border-blue-200',
+    'PLANNING': 'bg-orange-100 text-orange-800 border-orange-200',
+    'ON_HOLD': 'bg-gray-100 text-gray-800 border-gray-200'
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'Completed':
+      case 'COMPLETED':
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-      case 'In Progress':
+      case 'IN_PROGRESS':
         return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'Planning':
+      case 'PLANNING':
         return <Calendar className="h-4 w-4 text-orange-600" />;
       default:
         return <AlertTriangle className="h-4 w-4 text-gray-600" />;
     }
   };
 
-  const handleTaskUpdate = (taskId, updates) => {
-    // Simulate task update
-    console.log('Updating task:', taskId, updates);
-    toast({
-      title: 'Task Updated',
-      description: 'Task has been successfully updated.',
-    });
-    setEditingTask(null);
+  const handleTaskUpdate = async (taskId, updates) => {
+    try {
+      await projectAPI.updateTask(taskId, updates);
+      toast({
+        title: 'Task Updated',
+        description: 'Task has been successfully updated.',
+      });
+      
+      // Refresh projects data
+      const response = await projectAPI.getAll();
+      setProjects(response.data || []);
+      
+      setEditingTask(null);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update task. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const handleAddTask = () => {
-    // Simulate adding new task
-    console.log('Adding new task:', newTask);
-    toast({
-      title: 'Task Added',
-      description: 'New task has been added to the project.',
-    });
-    setNewTask({
-      name: '',
-      startDate: '',
-      endDate: '',
-      status: 'Planning',
-      progress: 0,
-      owner: '',
-      comments: ''
-    });
+  const handleAddTask = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const taskData = {
+        name: newTask.name,
+        startDate: newTask.startDate,
+        endDate: newTask.endDate,
+        status: newTask.status,
+        progress: newTask.progress,
+        owner: newTask.owner,
+        comments: newTask.comments
+      };
+
+      await projectAPI.createTask(selectedProject.id, taskData);
+      
+      toast({
+        title: 'Task Added',
+        description: 'New task has been added to the project.',
+      });
+      
+      // Refresh projects data
+      const response = await projectAPI.getAll();
+      setProjects(response.data || []);
+      
+      setNewTask({
+        name: '',
+        startDate: '',
+        endDate: '',
+        status: 'PLANNING',
+        progress: 0,
+        owner: '',
+        comments: ''
+      });
+    } catch (error) {
+      console.error('Error adding task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add task. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const raciOptions = ['Responsible', 'Accountable', 'Consulted', 'Informed'];
