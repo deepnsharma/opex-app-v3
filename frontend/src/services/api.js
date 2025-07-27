@@ -73,9 +73,19 @@ export const initiativeAPI = {
   update: (id, data) => api.put(`/initiatives/${id}`, data),
   delete: (id) => api.delete(`/initiatives/${id}`),
   getByStatus: (status) => api.get(`/initiatives/status/${status}`),
-  getBySite: (site) => api.get(`/initiatives/site/${site}`),
+  getByUnit: (unitCode) => api.get(`/initiatives/unit/${unitCode}`),
   getCountByStatus: (status) => api.get(`/initiatives/stats/count/${status}`),
   getTotalValue: () => api.get('/initiatives/stats/total-value')
+};
+
+// Lookup APIs
+export const lookupAPI = {
+  getUnits: () => api.get('/initiative-units'),
+  getUnitById: (id) => api.get(`/initiative-units/${id}`),
+  getUnitByCode: (code) => api.get(`/initiative-units/code/${code}`),
+  getDisciplines: () => api.get('/initiative-disciplines'),
+  getDisciplineById: (id) => api.get(`/initiative-disciplines/${id}`),
+  getDisciplineByCode: (code) => api.get(`/initiative-disciplines/code/${code}`)
 };
 
 // Workflow APIs

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -10,18 +10,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Slider } from '../components/ui/slider';
 import { Calendar, CalendarIcon, Upload, X, FileText, Save, Send } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import { initiativeAPI } from '../services/api';
+import { initiativeAPI, lookupAPI } from '../services/api';
 
 const InitiativeForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [disciplines, setDisciplines] = useState([]);
   
   const [formData, setFormData] = useState({
     title: '',
     initiator: '',
-    site: '',
+    unitId: '',
+    disciplineId: '',
+    budgetType: '',
     date: '',
     description: '',
     baselineData: '',
@@ -31,6 +35,30 @@ const InitiativeForm = () => {
     assumptions: ['', '', ''],
     estimatedCapex: '',
   });
+
+  // Load lookup data on component mount
+  useEffect(() => {
+    const loadLookupData = async () => {
+      try {
+        const [unitsResponse, disciplinesResponse] = await Promise.all([
+          lookupAPI.getUnits(),
+          lookupAPI.getDisciplines()
+        ]);
+        
+        setUnits(unitsResponse.data);
+        setDisciplines(disciplinesResponse.data);
+      } catch (error) {
+        console.error('Error loading lookup data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load form data. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadLookupData();
+  }, [toast]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -74,14 +102,14 @@ const InitiativeForm = () => {
       title: formData.title,
       description: formData.description,
       category: 'Operational Excellence', // Default category
-      site: formData.site,
-      department: 'Operations', // Default department  
+      unitId: parseInt(formData.unitId),
+      disciplineId: parseInt(formData.disciplineId),
       proposer: formData.initiator,
       proposalDate: formData.date,
       expectedClosureDate: formData.date, // You can add another field for this
       estimatedSavings: parseFloat(formData.expectedValue) || 0,
-      status: action === 'submit' ? 'PROPOSED' : 'DRAFT',
       priority: formData.confidence[0] > 80 ? 'HIGH' : formData.confidence[0] > 60 ? 'MEDIUM' : 'LOW',
+      budgetType: formData.budgetType,
       comments: `Baseline: ${formData.baselineData}. Target: ${formData.targetOutcome}. Confidence: ${formData.confidence[0]}%`
     };
 
@@ -154,16 +182,33 @@ const InitiativeForm = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="site" className="text-slate-700 font-medium">Site *</Label>
-                    <Select onValueChange={(value) => handleInputChange('site', value)}>
+                    <Label htmlFor="unit" className="text-slate-700 font-medium">Unit *</Label>
+                    <Select onValueChange={(value) => handleInputChange('unitId', value)}>
                       <SelectTrigger className="h-12 border-slate-300">
-                        <SelectValue placeholder="Select site" />
+                        <SelectValue placeholder="Select unit" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="plant-a">Manufacturing Plant A</SelectItem>
-                        <SelectItem value="plant-b">Manufacturing Plant B</SelectItem>
-                        <SelectItem value="plant-c">Manufacturing Plant C</SelectItem>
-                        <SelectItem value="warehouse-1">Distribution Center 1</SelectItem>
+                        {units.map(unit => (
+                          <SelectItem key={unit.id} value={unit.id.toString()}>
+                            {unit.code} - {unit.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="discipline" className="text-slate-700 font-medium">Discipline *</Label>
+                    <Select onValueChange={(value) => handleInputChange('disciplineId', value)}>
+                      <SelectTrigger className="h-12 border-slate-300">
+                        <SelectValue placeholder="Select discipline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {disciplines.map(discipline => (
+                          <SelectItem key={discipline.id} value={discipline.id.toString()}>
+                            {discipline.code} - {discipline.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -191,6 +236,19 @@ const InitiativeForm = () => {
                     className="min-h-32 border-slate-300 focus:border-blue-500"
                     required
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="budgetType" className="text-slate-700 font-medium">Budget Type *</Label>
+                  <Select onValueChange={(value) => handleInputChange('budgetType', value)}>
+                    <SelectTrigger className="h-12 border-slate-300">
+                      <SelectValue placeholder="Select Budget Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BUDGETED">Budgeted</SelectItem>
+                      <SelectItem value="NON_BUDGETED">Non-Budgeted</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

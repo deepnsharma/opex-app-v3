@@ -23,8 +23,17 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private ProjectService projectService;
 
+    @Autowired
+    private InitiativeUnitService unitService;
+
+    @Autowired
+    private InitiativeDisciplineService disciplineService;
+
     @Override
     public void run(String... args) throws Exception {
+        // Initialize lookup tables
+        initializeLookupTables();
+        
         // Create demo user
         if (!userService.existsByEmail("demo@opex.com")) {
             User demoUser = new User();
@@ -53,55 +62,122 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
+    private void initializeLookupTables() {
+        // Initialize Initiative Units if empty
+        if (unitService.findAll().isEmpty()) {
+            unitService.save(new InitiativeUnit("NDS", "NDS", "NDS Plant"));
+            unitService.save(new InitiativeUnit("HSD1", "HSD1", "HSD1 Plant"));
+            unitService.save(new InitiativeUnit("HSD2", "HSD2", "HSD2 Plant"));
+            unitService.save(new InitiativeUnit("HSD3", "HSD3", "HSD3 Plant"));
+            unitService.save(new InitiativeUnit("DHJ", "DHJ", "DHJ Plant"));
+            unitService.save(new InitiativeUnit("APL", "APL", "APL Plant"));
+            unitService.save(new InitiativeUnit("TCD", "TCD", "TCD Plant"));
+        }
+        
+        // Initialize Initiative Disciplines if empty
+        if (disciplineService.findAll().isEmpty()) {
+            disciplineService.save(new InitiativeDiscipline("OP", "Operation", 
+                "• Plant Productivity Enhancement – w.r.t rated capacity based on previous year realization\n" +
+                "• Capacity debottlenecking\n" +
+                "• Raw Material (RM) norms reduction\n" +
+                "• Utility norms reduction (Steam, Power, Water, etc.)\n" +
+                "• Downtime reduction\n" +
+                "• Inventory/ WIP reduction\n" +
+                "• New Product Identification & Mapping"));
+            
+            disciplineService.save(new InitiativeDiscipline("EG", "Engineering & Utility", 
+                "• Downtime reduction\n" +
+                "• R&M (Repair and Improvement) etc.\n" +
+                "• Spares Inventory reduction\n" +
+                "• Improving efficiency of Utility equipments like Boiler, Chiller, etc."));
+            
+            disciplineService.save(new InitiativeDiscipline("EV", "Environment", 
+                "• Reduction in Waste generation\n" +
+                "• Effluent handling and treatment cost reduction\n" +
+                "• Improving asset efficiency\n" +
+                "• Valorisation initiatives etc."));
+            
+            disciplineService.save(new InitiativeDiscipline("SF", "Safety", 
+                "• Process Safety Management etc."));
+            
+            disciplineService.save(new InitiativeDiscipline("QA", "Quality", 
+                "• Reduction in Finished Goods rejections/ deviations\n" +
+                "• Improvements in in-process quality checks"));
+            
+            disciplineService.save(new InitiativeDiscipline("OT", "Others", 
+                "• Logistic / Transportation / Supply chain process\n" +
+                "• Packaging improvements\n" +
+                "• Inventory reduction"));
+        }
+    }
+
     private void createSampleInitiatives() {
-        // Initiative 1
-        Initiative initiative1 = new Initiative();
-        initiative1.setTitle("Energy Efficiency Optimization");
-        initiative1.setDescription("Implementing LED lighting and optimizing HVAC systems to reduce energy consumption");
-        initiative1.setCategory("Energy");
-        initiative1.setSite("Manufacturing Plant A");
-        initiative1.setDepartment("Operations");
-        initiative1.setProposer("John Smith");
-        initiative1.setProposalDate(LocalDate.of(2024, 1, 15));
-        initiative1.setExpectedClosureDate(LocalDate.of(2024, 6, 15));
-        initiative1.setEstimatedSavings(new BigDecimal("50000.00"));
-        initiative1.setStatus("IN_PROGRESS");
-        initiative1.setPriority("HIGH");
-        initiative1.setComments("Implementing LED lighting and optimizing HVAC systems");
-        initiativeService.save(initiative1);
-
-        // Initiative 2
-        Initiative initiative2 = new Initiative();
-        initiative2.setTitle("Waste Reduction Initiative");
-        initiative2.setDescription("Implementing lean manufacturing principles to reduce material waste");
-        initiative2.setCategory("Waste Management");
-        initiative2.setSite("Manufacturing Plant B");
-        initiative2.setDepartment("Production");
-        initiative2.setProposer("Emma Davis");
-        initiative2.setProposalDate(LocalDate.of(2024, 1, 20));
-        initiative2.setExpectedClosureDate(LocalDate.of(2024, 5, 20));
-        initiative2.setEstimatedSavings(new BigDecimal("120000.00"));
-        initiative2.setActualSavings(new BigDecimal("95000.00"));
-        initiative2.setStatus("APPROVED");
-        initiative2.setPriority("HIGH");
-        initiative2.setComments("Lean manufacturing principles implementation");
-        initiativeService.save(initiative2);
-
-        // Initiative 3
-        Initiative initiative3 = new Initiative();
-        initiative3.setTitle("Process Automation");
-        initiative3.setDescription("Automating manual processes to improve efficiency and reduce errors");
-        initiative3.setCategory("Automation");
-        initiative3.setSite("Manufacturing Plant C");
-        initiative3.setDepartment("Engineering");
-        initiative3.setProposer("Mike Chen");
-        initiative3.setProposalDate(LocalDate.of(2024, 2, 1));
-        initiative3.setExpectedClosureDate(LocalDate.of(2024, 8, 1));
-        initiative3.setEstimatedSavings(new BigDecimal("85000.00"));
-        initiative3.setStatus("PROPOSED");
-        initiative3.setPriority("MEDIUM");
-        initiative3.setComments("Automation of manual processes");
-        initiativeService.save(initiative3);
+        // Get lookup data
+        InitiativeUnit ndsUnit = unitService.findByCode("NDS").orElse(null);
+        InitiativeUnit hsd1Unit = unitService.findByCode("HSD1").orElse(null);
+        InitiativeUnit aplUnit = unitService.findByCode("APL").orElse(null);
+        
+        InitiativeDiscipline opDiscipline = disciplineService.findByCode("OP").orElse(null);
+        InitiativeDiscipline egDiscipline = disciplineService.findByCode("EG").orElse(null);
+        InitiativeDiscipline evDiscipline = disciplineService.findByCode("EV").orElse(null);
+        
+        if (ndsUnit != null && opDiscipline != null) {
+            // Initiative 1
+            Initiative initiative1 = new Initiative();
+            initiative1.setTitle("Energy Efficiency Optimization");
+            initiative1.setDescription("Implementing LED lighting and optimizing HVAC systems to reduce energy consumption");
+            initiative1.setCategory("Energy");
+            initiative1.setUnit(ndsUnit);
+            initiative1.setDiscipline(opDiscipline);
+            initiative1.setProposer("John Smith");
+            initiative1.setProposalDate(LocalDate.of(2025, 1, 15));
+            initiative1.setExpectedClosureDate(LocalDate.of(2025, 6, 15));
+            initiative1.setEstimatedSavings(new BigDecimal("50000.00"));
+            initiative1.setStatus("IN_PROGRESS");
+            initiative1.setPriority("HIGH");
+            initiative1.setBudgetType("BUDGETED");
+            initiative1.setComments("Implementing LED lighting and optimizing HVAC systems");
+            initiativeService.save(initiative1);
+        }
+        
+        if (hsd1Unit != null && egDiscipline != null) {
+            // Initiative 2
+            Initiative initiative2 = new Initiative();
+            initiative2.setTitle("Waste Reduction Initiative");
+            initiative2.setDescription("Implementing lean manufacturing principles to reduce material waste");
+            initiative2.setCategory("Waste Management");
+            initiative2.setUnit(hsd1Unit);
+            initiative2.setDiscipline(egDiscipline);
+            initiative2.setProposer("Emma Davis");
+            initiative2.setProposalDate(LocalDate.of(2025, 1, 20));
+            initiative2.setExpectedClosureDate(LocalDate.of(2025, 5, 20));
+            initiative2.setEstimatedSavings(new BigDecimal("120000.00"));
+            initiative2.setActualSavings(new BigDecimal("95000.00"));
+            initiative2.setStatus("APPROVED");
+            initiative2.setPriority("HIGH");
+            initiative2.setBudgetType("NON_BUDGETED");
+            initiative2.setComments("Lean manufacturing principles implementation");
+            initiativeService.save(initiative2);
+        }
+        
+        if (aplUnit != null && evDiscipline != null) {
+            // Initiative 3
+            Initiative initiative3 = new Initiative();
+            initiative3.setTitle("Process Automation");
+            initiative3.setDescription("Automating manual processes to improve efficiency and reduce errors");
+            initiative3.setCategory("Automation");
+            initiative3.setUnit(aplUnit);
+            initiative3.setDiscipline(evDiscipline);
+            initiative3.setProposer("Mike Chen");
+            initiative3.setProposalDate(LocalDate.of(2025, 2, 1));
+            initiative3.setExpectedClosureDate(LocalDate.of(2025, 8, 1));
+            initiative3.setEstimatedSavings(new BigDecimal("85000.00"));
+            initiative3.setStatus("PROPOSED");
+            initiative3.setPriority("MEDIUM");
+            initiative3.setBudgetType("BUDGETED");
+            initiative3.setComments("Automation of manual processes");
+            initiativeService.save(initiative3);
+        }
     }
 
     private void createSampleKPIs() {

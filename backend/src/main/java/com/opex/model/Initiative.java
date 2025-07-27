@@ -27,11 +27,13 @@ public class Initiative {
     @NotBlank
     private String category;
 
-    @NotBlank
-    private String site;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unit_id", nullable = false)
+    private InitiativeUnit unit;
 
-    @NotBlank
-    private String department;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "discipline_id", nullable = false)
+    private InitiativeDiscipline discipline;
 
     @NotBlank
     private String proposer;
@@ -56,6 +58,9 @@ public class Initiative {
 
     @NotBlank
     private String priority; // HIGH, MEDIUM, LOW
+
+    @NotBlank
+    private String budgetType; // BUDGETED, NON_BUDGETED
 
     @Column(columnDefinition = "TEXT")
     private String comments;
@@ -92,11 +97,11 @@ public class Initiative {
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
-    public String getSite() { return site; }
-    public void setSite(String site) { this.site = site; }
+    public InitiativeUnit getUnit() { return unit; }
+    public void setUnit(InitiativeUnit unit) { this.unit = unit; }
 
-    public String getDepartment() { return department; }
-    public void setDepartment(String department) { this.department = department; }
+    public InitiativeDiscipline getDiscipline() { return discipline; }
+    public void setDiscipline(InitiativeDiscipline discipline) { this.discipline = discipline; }
 
     public String getProposer() { return proposer; }
     public void setProposer(String proposer) { this.proposer = proposer; }
@@ -121,6 +126,9 @@ public class Initiative {
 
     public String getPriority() { return priority; }
     public void setPriority(String priority) { this.priority = priority; }
+
+    public String getBudgetType() { return budgetType; }
+    public void setBudgetType(String budgetType) { this.budgetType = budgetType; }
 
     public String getComments() { return comments; }
     public void setComments(String comments) { this.comments = comments; }

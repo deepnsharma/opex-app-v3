@@ -1,7 +1,11 @@
 package com.opex.controller;
 
 import com.opex.model.Initiative;
+import com.opex.model.InitiativeUnit;
+import com.opex.model.InitiativeDiscipline;
 import com.opex.service.InitiativeService;
+import com.opex.service.InitiativeUnitService;
+import com.opex.dto.CreateInitiativeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +19,12 @@ public class InitiativeController {
 
     @Autowired
     private InitiativeService initiativeService;
+
+    @Autowired
+    private InitiativeUnitService unitService;
+
+    @Autowired
+    private InitiativeDisciplineService disciplineService;
 
     @GetMapping
     public List<Initiative> getAllInitiatives() {
@@ -34,8 +44,32 @@ public class InitiativeController {
     }
 
     @PostMapping
-    public ResponseEntity<Initiative> createInitiative(@RequestBody Initiative initiative) {
+    public ResponseEntity<Initiative> createInitiative(@RequestBody CreateInitiativeRequest request) {
         try {
+            // Get unit and discipline from lookup tables
+            Optional<InitiativeUnit> unit = unitService.findById(request.getUnitId());
+            Optional<InitiativeDiscipline> discipline = disciplineService.findById(request.getDisciplineId());
+            
+            if (!unit.isPresent() || !discipline.isPresent()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Create new initiative
+            Initiative initiative = new Initiative();
+            initiative.setTitle(request.getTitle());
+            initiative.setDescription(request.getDescription());
+            initiative.setCategory(request.getCategory());
+            initiative.setUnit(unit.get());
+            initiative.setDiscipline(discipline.get());
+            initiative.setProposer(request.getProposer());
+            initiative.setProposalDate(request.getProposalDate());
+            initiative.setExpectedClosureDate(request.getExpectedClosureDate());
+            initiative.setEstimatedSavings(request.getEstimatedSavings());
+            initiative.setStatus("PROPOSED");
+            initiative.setPriority(request.getPriority());
+            initiative.setBudgetType(request.getBudgetType());
+            initiative.setComments(request.getComments());
+            
             Initiative savedInitiative = initiativeService.save(initiative);
             return ResponseEntity.ok(savedInitiative);
         } catch (Exception e) {
@@ -65,9 +99,9 @@ public class InitiativeController {
         return initiativeService.findByStatus(status);
     }
 
-    @GetMapping("/site/{site}")
-    public List<Initiative> getInitiativesBySite(@PathVariable String site) {
-        return initiativeService.findBySite(site);
+    @GetMapping("/unit/{unitCode}")
+    public List<Initiative> getInitiativesByUnit(@PathVariable String unitCode) {
+        return initiativeService.findByUnitCode(unitCode);
     }
 
     @GetMapping("/stats/count/{status}")
