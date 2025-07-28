@@ -1,16 +1,16 @@
 import React from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AuthProvider from "./contexts/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import InitiativeForm from "./pages/InitiativeForm";
-import WorkflowManagement from "./pages/WorkflowManagement";
-import ProjectTracking from "./pages/ProjectTracking";
-import KPITracking from "./pages/KPITracking";
-import InitiativeClosure from "./pages/InitiativeClosure";
-import Reports from "./pages/Reports";
+import AuthProvider from "./contexts/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import InitiativeForm from "./pages/InitiativeForm.jsx";
+import WorkflowManagement from "./pages/WorkflowManagement.jsx";
+import ProjectTracking from "./pages/ProjectTracking.jsx";
+import KPITracking from "./pages/KPITracking.jsx";
+import InitiativeClosure from "./pages/InitiativeClosure.jsx";
+import Reports from "./pages/Reports.jsx";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
