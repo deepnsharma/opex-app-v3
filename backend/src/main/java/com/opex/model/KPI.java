@@ -20,7 +20,7 @@ public class KPI {
     @Column(nullable = false)
     private String site;
 
-    @Column(nullable = false)
+    @Column(name = "`month`", nullable = false)
     private String month;
 
     @Column(nullable = false, precision = 15, scale = 2)
