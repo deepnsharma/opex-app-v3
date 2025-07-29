@@ -6,7 +6,6 @@ import {
   LayoutDashboard, 
   Plus, 
   GitBranch, 
-  FolderKanban, 
   BarChart3, 
   FileX, 
   FileText,
@@ -28,7 +27,7 @@ const Layout = ({ children, title }) => {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/initiatives/new', icon: Plus, label: 'New Initiative' },
     { path: '/workflow', icon: GitBranch, label: 'Workflow' },
-    { path: '/projects', icon: FolderKanban, label: 'Projects' },
+
     { path: '/kpi-tracking', icon: BarChart3, label: 'KPI Tracking' },
     { path: '/closure', icon: FileX, label: 'Closure' },
     { path: '/reports', icon: FileText, label: 'Reports' },

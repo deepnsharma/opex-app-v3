@@ -55,51 +55,6 @@ export const mockInitiatives = [
   }
 ];
 
-export const mockProjects = [
-  {
-    id: 'PRJ-001',
-    initiativeId: 'INI-001',
-    name: 'LED Lighting Installation',
-    tasks: [
-      {
-        id: 'T001',
-        name: 'Site Survey and Assessment',
-        startDate: '2024-02-01',
-        endDate: '2024-02-07',
-        status: 'Completed',
-        progress: 100,
-        owner: 'Technical Team',
-        comments: 'Survey completed, identified 500 fixtures for replacement'
-      },
-      {
-        id: 'T002',
-        name: 'LED Procurement',
-        startDate: '2024-02-08',
-        endDate: '2024-02-15',
-        status: 'In Progress',
-        progress: 75,
-        owner: 'Procurement Team',
-        comments: 'Orders placed, delivery expected by 2/14'
-      },
-      {
-        id: 'T003',
-        name: 'Installation Phase 1',
-        startDate: '2024-02-16',
-        endDate: '2024-02-28',
-        status: 'Planning',
-        progress: 0,
-        owner: 'Maintenance Team',
-        comments: 'Waiting for equipment delivery'
-      }
-    ],
-    raci: [
-      { role: 'Project Manager', responsible: 'John Smith', accountable: 'Mike Chen', consulted: 'Sarah Johnson', informed: 'All Staff' },
-      { role: 'Technical Lead', responsible: 'Tech Team', accountable: 'John Smith', consulted: 'Vendors', informed: 'Management' },
-      { role: 'Procurement', responsible: 'Proc Team', accountable: 'Finance', consulted: 'Tech Team', informed: 'Project Manager' }
-    ]
-  }
-];
-
 export const mockKPIs = [
   {
     month: 'Jan 2024',
