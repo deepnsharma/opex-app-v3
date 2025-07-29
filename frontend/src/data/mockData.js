@@ -6,7 +6,7 @@ export const mockInitiatives = [
     site: 'Plant A',
     dateCreated: '2024-01-15',
     status: 'In Progress',
-    stage: 'Unit Head Review',
+    stage: 'Corporate TSD Review',
     description: 'Implementing LED lighting and optimizing HVAC systems to reduce energy consumption',
     baselineData: '2.5 MWh/day average consumption over 12 months',
     targetOutcome: 'Reduce energy consumption by 15% (0.375 MWh/day)',
@@ -19,10 +19,9 @@ export const mockInitiatives = [
     ],
     estimatedCapex: 75000,
     attachments: ['energy_audit_report.pdf', 'led_specifications.xlsx'],
-    currentStage: 2,
+    currentStage: 1,
     workflow: [
-      { stage: 'Site TSD', status: 'completed', date: '2024-01-16', approver: 'Sarah Johnson' },
-      { stage: 'Unit Head', status: 'pending', date: null, approver: 'Mike Chen' },
+      { stage: 'Site TSD', status: 'pending', date: null, approver: 'Sarah Johnson' },
       { stage: 'Corporate TSD', status: 'waiting', date: null, approver: 'David Wilson' },
       { stage: 'CMO', status: 'waiting', date: null, approver: 'Lisa Anderson' }
     ]
@@ -47,10 +46,9 @@ export const mockInitiatives = [
     ],
     estimatedCapex: 25000,
     attachments: ['waste_analysis.pdf'],
-    currentStage: 4,
+    currentStage: 3,
     workflow: [
       { stage: 'Site TSD', status: 'completed', date: '2024-01-21', approver: 'Tom Brown' },
-      { stage: 'Unit Head', status: 'completed', date: '2024-01-23', approver: 'Anna White' },
       { stage: 'Corporate TSD', status: 'completed', date: '2024-01-25', approver: 'David Wilson' },
       { stage: 'CMO', status: 'completed', date: '2024-01-28', approver: 'Lisa Anderson' }
     ]
@@ -141,7 +139,7 @@ export const mockDashboardData = {
   completionRate: 75,
   recentActivities: [
     { id: 1, action: 'New initiative submitted', user: 'John Smith', time: '2 hours ago', type: 'create' },
-    { id: 2, action: 'Initiative approved by Unit Head', user: 'Mike Chen', time: '4 hours ago', type: 'approve' },
+    { id: 2, action: 'Initiative approved by Corporate TSD', user: 'David Wilson', time: '4 hours ago', type: 'approve', },
     { id: 3, action: 'KPI data updated', user: 'Emma Davis', time: '6 hours ago', type: 'update' },
     { id: 4, action: 'Project milestone completed', user: 'Tech Team', time: '1 day ago', type: 'complete' }
   ]

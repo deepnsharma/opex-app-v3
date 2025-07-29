@@ -17,13 +17,13 @@ const InitiativeForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
-  const [units, setUnits] = useState([]);
+  const [sites, setSites] = useState([]);
   const [disciplines, setDisciplines] = useState([]);
   
   const [formData, setFormData] = useState({
     title: '',
     initiator: '',
-    unitId: '',
+    siteId: '',
     disciplineId: '',
     budgetType: '',
     date: '',
@@ -40,12 +40,12 @@ const InitiativeForm = () => {
   useEffect(() => {
     const loadLookupData = async () => {
       try {
-        const [unitsResponse, disciplinesResponse] = await Promise.all([
-          lookupAPI.getUnits(),
+        const [sitesResponse, disciplinesResponse] = await Promise.all([
+          lookupAPI.getSites(),
           lookupAPI.getDisciplines()
         ]);
         
-        setUnits(unitsResponse.data);
+        setSites(sitesResponse.data);
         setDisciplines(disciplinesResponse.data);
       } catch (error) {
         console.error('Error loading lookup data:', error);
@@ -102,7 +102,7 @@ const InitiativeForm = () => {
       title: formData.title,
       description: formData.description,
       category: 'Operational Excellence', // Default category
-      unitId: parseInt(formData.unitId),
+      siteId: parseInt(formData.siteId),
       disciplineId: parseInt(formData.disciplineId),
       proposer: formData.initiator,
       proposalDate: formData.date,
@@ -182,15 +182,15 @@ const InitiativeForm = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="unit" className="text-slate-700 font-medium">Unit *</Label>
-                    <Select onValueChange={(value) => handleInputChange('unitId', value)}>
+                    <Label htmlFor="site" className="text-slate-700 font-medium">Site *</Label>
+                    <Select onValueChange={(value) => handleInputChange('siteId', value)}>
                       <SelectTrigger className="h-12 border-slate-300">
-                        <SelectValue placeholder="Select unit" />
+                        <SelectValue placeholder="Select site" />
                       </SelectTrigger>
                       <SelectContent>
-                        {units.map(unit => (
-                          <SelectItem key={unit.id} value={unit.id.toString()}>
-                            {unit.code} - {unit.name}
+                        {sites.map(site => (
+                          <SelectItem key={site.id} value={site.id.toString()}>
+                            {site.code} - {site.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

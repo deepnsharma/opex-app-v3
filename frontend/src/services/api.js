@@ -73,16 +73,16 @@ export const initiativeAPI = {
   update: (id, data) => api.put(`/initiatives/${id}`, data),
   delete: (id) => api.delete(`/initiatives/${id}`),
   getByStatus: (status) => api.get(`/initiatives/status/${status}`),
-  getByUnit: (unitCode) => api.get(`/initiatives/unit/${unitCode}`),
+  getBySite: (siteCode) => api.get(`/initiatives/site/${siteCode}`),
   getCountByStatus: (status) => api.get(`/initiatives/stats/count/${status}`),
   getTotalValue: () => api.get('/initiatives/stats/total-value')
 };
 
 // Lookup APIs
 export const lookupAPI = {
-  getUnits: () => api.get('/initiative-units'),
-  getUnitById: (id) => api.get(`/initiative-units/${id}`),
-  getUnitByCode: (code) => api.get(`/initiative-units/code/${code}`),
+  getSites: () => api.get('/initiative-sites'),
+  getSiteById: (id) => api.get(`/initiative-sites/${id}`),
+  getSiteByCode: (code) => api.get(`/initiative-sites/code/${code}`),
   getDisciplines: () => api.get('/initiative-disciplines'),
   getDisciplineById: (id) => api.get(`/initiative-disciplines/${id}`),
   getDisciplineByCode: (code) => api.get(`/initiative-disciplines/code/${code}`)
@@ -109,24 +109,6 @@ export const kpiAPI = {
   delete: (id) => api.delete(`/kpis/${id}`),
   getTotalSavings: () => api.get('/kpis/stats/total-savings'),
   getAvgProductivity: () => api.get('/kpis/stats/avg-productivity')
-};
-
-// Project APIs
-export const projectAPI = {
-  getAll: () => api.get('/projects'),
-  getById: (id) => api.get(`/projects/${id}`),
-  getByProjectId: (projectId) => api.get(`/projects/project-id/${projectId}`),
-  getByInitiativeId: (initiativeId) => api.get(`/projects/initiative/${initiativeId}`),
-  create: (data) => api.post('/projects', data),
-  update: (id, data) => api.put(`/projects/${id}`, data),
-  delete: (id) => api.delete(`/projects/${id}`),
-  
-  // Task APIs
-  getTasks: (projectId) => api.get(`/projects/${projectId}/tasks`),
-  createTask: (projectId, data) => api.post(`/projects/${projectId}/tasks`, data),
-  updateTask: (taskId, data) => api.put(`/projects/tasks/${taskId}`, data),
-  deleteTask: (taskId) => api.delete(`/projects/tasks/${taskId}`),
-  getTaskCountByStatus: (status) => api.get(`/projects/tasks/stats/count/${status}`)
 };
 
 // Dashboard APIs

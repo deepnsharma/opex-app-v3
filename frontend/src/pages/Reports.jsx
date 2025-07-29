@@ -418,7 +418,7 @@ const Reports = () => {
                         <div className="truncate">{initiative.title}</div>
                       </TableCell>
                       <TableCell>{initiative.proposer}</TableCell>
-                      <TableCell>{initiative.site}</TableCell>
+                      <TableCell>{initiative.site?.name || initiative.site?.code || 'N/A'}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(initiative.status)}>
                           {initiative.status}

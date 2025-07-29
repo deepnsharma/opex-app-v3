@@ -214,7 +214,7 @@ const InitiativeClosure = () => {
                     <div>
                       <p className="text-orange-600 text-sm font-medium">Sites Covered</p>
                       <p className="text-2xl font-bold text-orange-900">
-                        {new Set(initiatives.map(init => init.site)).size}
+                        {new Set(initiatives.map(init => init.site?.name || init.site?.code || 'Unknown')).size}
                       </p>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ const InitiativeClosure = () => {
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-slate-600">Site</Label>
-                        <p className="text-sm text-slate-700 mt-1">{selectedInitiative.site}</p>
+                        <p className="text-sm text-slate-700 mt-1">{selectedInitiative.site?.name || selectedInitiative.site?.code || 'N/A'}</p>
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-slate-600">Status</Label>
@@ -331,7 +331,7 @@ const InitiativeClosure = () => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600">Sites Covered</span>
-                        <span className="font-bold text-orange-600">{new Set(initiatives.map(init => init.site)).size}</span>
+                        <span className="font-bold text-orange-600">{new Set(initiatives.map(init => init.site?.name || init.site?.code || 'Unknown')).size}</span>
                       </div>
                     </div>
                   </div>

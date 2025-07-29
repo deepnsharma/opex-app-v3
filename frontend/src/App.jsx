@@ -7,7 +7,6 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import InitiativeForm from "./pages/InitiativeForm.jsx";
 import WorkflowManagement from "./pages/WorkflowManagement.jsx";
-import ProjectTracking from "./pages/ProjectTracking.jsx";
 import KPITracking from "./pages/KPITracking.jsx";
 import InitiativeClosure from "./pages/InitiativeClosure.jsx";
 import Reports from "./pages/Reports.jsx";
@@ -41,14 +40,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <WorkflowManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/projects"
-              element={
-                <ProtectedRoute>
-                  <ProjectTracking />
                 </ProtectedRoute>
               }
             />

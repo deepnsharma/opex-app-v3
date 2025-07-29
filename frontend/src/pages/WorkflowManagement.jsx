@@ -227,7 +227,7 @@ const WorkflowManagement = () => {
                       <div>
                         <CardTitle className="text-lg font-bold text-slate-800">{initiative.title}</CardTitle>
                         <p className="text-sm text-slate-600 mt-1">
-                          {initiative.initiativeId || initiative.id} • {initiative.proposer} • {initiative.site}
+                          {initiative.initiativeId || initiative.id} • {initiative.proposer} • {initiative.site?.name || initiative.site?.code || 'N/A'}
                         </p>
                       </div>
                       <Badge className={getStatusColor(initiative.status)}>
@@ -294,7 +294,7 @@ const WorkflowManagement = () => {
                                 </div>
                                 <div>
                                   <Label className="font-medium">Site:</Label>
-                                  <p>{initiative.site}</p>
+                                  <p>{initiative.site?.name || initiative.site?.code || 'N/A'}</p>
                                 </div>
                                 <div>
                                   <Label className="font-medium">Expected Savings:</Label>

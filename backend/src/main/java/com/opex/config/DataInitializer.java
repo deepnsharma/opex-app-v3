@@ -21,9 +21,6 @@ public class DataInitializer implements CommandLineRunner {
     private KPIService kpiService;
 
     @Autowired
-    private ProjectService projectService;
-
-    @Autowired
     private InitiativeSiteService siteService;
 
     @Autowired
@@ -54,11 +51,6 @@ public class DataInitializer implements CommandLineRunner {
         // Create sample KPIs
         if (kpiService.findAll().isEmpty()) {
             createSampleKPIs();
-        }
-
-        // Create sample projects
-        if (projectService.findAll().isEmpty()) {
-            createSampleProjects();
         }
     }
 
@@ -226,55 +218,5 @@ public class DataInitializer implements CommandLineRunner {
         kpi4.setUnit("USD");
         kpi4.setDescription("Monthly cost savings target");
         kpiService.save(kpi4);
-    }
-
-    private void createSampleProjects() {
-        // Get the first initiative for project creation
-        if (!initiativeService.findAll().isEmpty()) {
-            Initiative initiative = initiativeService.findAll().get(0);
-            
-            Project project = new Project();
-            project.setName("LED Lighting Installation");
-            project.setProjectId("PRJ-001");
-            project.setInitiative(initiative);
-            project = projectService.save(project);
-
-            // Create sample tasks
-            Task task1 = new Task();
-            task1.setTaskId("TSK-001");
-            task1.setName("Site Survey and Assessment");
-            task1.setStartDate(LocalDate.of(2024, 2, 1));
-            task1.setEndDate(LocalDate.of(2024, 2, 7));
-            task1.setStatus("COMPLETED");
-            task1.setProgress(100);
-            task1.setOwner("Technical Team");
-            task1.setComments("Survey completed, identified 500 fixtures for replacement");
-            task1.setProject(project);
-            projectService.saveTask(task1);
-
-            Task task2 = new Task();
-            task2.setTaskId("TSK-002");
-            task2.setName("LED Procurement");
-            task2.setStartDate(LocalDate.of(2024, 2, 8));
-            task2.setEndDate(LocalDate.of(2024, 2, 15));
-            task2.setStatus("IN_PROGRESS");
-            task2.setProgress(75);
-            task2.setOwner("Procurement Team");
-            task2.setComments("Orders placed, delivery expected by 2/14");
-            task2.setProject(project);
-            projectService.saveTask(task2);
-
-            Task task3 = new Task();
-            task3.setTaskId("TSK-003");
-            task3.setName("Installation Phase 1");
-            task3.setStartDate(LocalDate.of(2024, 2, 16));
-            task3.setEndDate(LocalDate.of(2024, 2, 28));
-            task3.setStatus("PLANNING");
-            task3.setProgress(0);
-            task3.setOwner("Maintenance Team");
-            task3.setComments("Waiting for equipment delivery");
-            task3.setProject(project);
-            projectService.saveTask(task3);
-        }
     }
 }

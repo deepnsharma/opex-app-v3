@@ -2,7 +2,6 @@ package com.opex.controller;
 
 import com.opex.service.InitiativeService;
 import com.opex.service.KPIService;
-import com.opex.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +19,6 @@ public class DashboardController {
     @Autowired
     private KPIService kpiService;
 
-    @Autowired
-    private ProjectService projectService;
-
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
@@ -36,12 +32,7 @@ public class DashboardController {
         // Financial statistics
         Double totalSavings = kpiService.getTotalActualValue();
         Double expectedValue = initiativeService.getTotalExpectedValue();
-        
-        // Task statistics
-        Long completedTasks = projectService.countTasksByStatus("COMPLETED");
-        Long inProgressTasks = projectService.countTasksByStatus("IN_PROGRESS");
-        Long plannedTasks = projectService.countTasksByStatus("PLANNING");
-        
+
         // Calculate completion rate
         double completionRate = totalInitiatives > 0 ? 
             (approvedInitiatives.doubleValue() / totalInitiatives.doubleValue()) * 100 : 0;
@@ -52,9 +43,6 @@ public class DashboardController {
         stats.put("inProgressInitiatives", inProgressInitiatives);
         stats.put("totalSavings", totalSavings != null ? totalSavings : 0.0);
         stats.put("expectedValue", expectedValue != null ? expectedValue : 0.0);
-        stats.put("completedTasks", completedTasks);
-        stats.put("inProgressTasks", inProgressTasks);
-        stats.put("plannedTasks", plannedTasks);
         stats.put("completionRate", Math.round(completionRate));
         stats.put("targetSavings", 3000000.0); // Target for the year
         
