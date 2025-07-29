@@ -1,9 +1,11 @@
 package com.opex.model;
 
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "initiative_units")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class InitiativeUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -7,6 +7,7 @@ public class CreateInitiativeRequest {
     private String title;
     private String description;
     private String category;
+    private String site;
     private Long unitId;
     private Long disciplineId;
     private String proposer;
@@ -26,6 +27,9 @@ public class CreateInitiativeRequest {
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public String getSite() { return site; }
+    public void setSite(String site) { this.site = site; }
 
     public Long getUnitId() { return unitId; }
     public void setUnitId(Long unitId) { this.unitId = unitId; }

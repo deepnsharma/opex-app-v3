@@ -3,6 +3,7 @@ package com.opex.model;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.math.BigDecimal;
@@ -27,12 +28,17 @@ public class Initiative {
     @NotBlank
     private String category;
 
+    @NotBlank
+    private String site;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unit_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private InitiativeUnit unit;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "discipline_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private InitiativeDiscipline discipline;
 
     @NotBlank
@@ -96,6 +102,9 @@ public class Initiative {
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public String getSite() { return site; }
+    public void setSite(String site) { this.site = site; }
 
     public InitiativeUnit getUnit() { return unit; }
     public void setUnit(InitiativeUnit unit) { this.unit = unit; }

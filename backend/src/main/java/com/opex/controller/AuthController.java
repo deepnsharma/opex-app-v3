@@ -6,7 +6,7 @@ import com.opex.dto.LoginRequest;
 import com.opex.dto.MessageResponse;
 import com.opex.model.User;
 import com.opex.service.UserService;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

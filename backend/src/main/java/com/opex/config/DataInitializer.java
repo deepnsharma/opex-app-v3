@@ -127,6 +127,7 @@ public class DataInitializer implements CommandLineRunner {
             initiative1.setTitle("Energy Efficiency Optimization");
             initiative1.setDescription("Implementing LED lighting and optimizing HVAC systems to reduce energy consumption");
             initiative1.setCategory("Energy");
+            initiative1.setSite("Manufacturing Plant A");
             initiative1.setUnit(ndsUnit);
             initiative1.setDiscipline(opDiscipline);
             initiative1.setProposer("John Smith");
@@ -146,6 +147,7 @@ public class DataInitializer implements CommandLineRunner {
             initiative2.setTitle("Waste Reduction Initiative");
             initiative2.setDescription("Implementing lean manufacturing principles to reduce material waste");
             initiative2.setCategory("Waste Management");
+            initiative2.setSite("Manufacturing Plant B");
             initiative2.setUnit(hsd1Unit);
             initiative2.setDiscipline(egDiscipline);
             initiative2.setProposer("Emma Davis");
@@ -166,6 +168,7 @@ public class DataInitializer implements CommandLineRunner {
             initiative3.setTitle("Process Automation");
             initiative3.setDescription("Automating manual processes to improve efficiency and reduce errors");
             initiative3.setCategory("Automation");
+            initiative3.setSite("Manufacturing Plant C");
             initiative3.setUnit(aplUnit);
             initiative3.setDiscipline(evDiscipline);
             initiative3.setProposer("Mike Chen");

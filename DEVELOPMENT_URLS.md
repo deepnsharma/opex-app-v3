@@ -5,11 +5,11 @@
 - **Frontend Server**: Vite dev server with hot reload
 
 ## Backend API Base URL
-- **Local API**: http://localhost:8001
+- **Local API**: http://localhost:8080
 - **API Endpoints**: http://localhost:8001/api/*
 
 ## Database
-- **H2 Console**: http://localhost:8001/h2-console
+- **H2 Console**: http://localhost:8080/h2-console
 - **JDBC URL**: jdbc:h2:mem:opexdb
 - **Username**: sa
 - **Password**: password
@@ -41,7 +41,7 @@ mvn spring-boot:run
 
 ## Development Workflow:
 1. ✅ Use localhost:3000 for frontend
-2. ✅ Use localhost:8001 for backend API
+2. ✅ Use localhost:8080 for backend API
 3. ✅ H2 database runs in-memory
 4. ✅ Hot reload enabled for frontend
 5. ✅ Standard local development setup

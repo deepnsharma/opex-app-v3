@@ -5,6 +5,7 @@ import com.opex.model.InitiativeUnit;
 import com.opex.model.InitiativeDiscipline;
 import com.opex.service.InitiativeService;
 import com.opex.service.InitiativeUnitService;
+import com.opex.service.InitiativeDisciplineService;
 import com.opex.dto.CreateInitiativeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +60,7 @@ public class InitiativeController {
             initiative.setTitle(request.getTitle());
             initiative.setDescription(request.getDescription());
             initiative.setCategory(request.getCategory());
+            initiative.setSite(request.getSite());
             initiative.setUnit(unit.get());
             initiative.setDiscipline(discipline.get());
             initiative.setProposer(request.getProposer());
