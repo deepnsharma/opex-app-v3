@@ -1,10 +1,10 @@
 package com.opex.controller;
 
 import com.opex.model.Initiative;
-import com.opex.model.InitiativeUnit;
+import com.opex.model.InitiativeSite;
 import com.opex.model.InitiativeDiscipline;
 import com.opex.service.InitiativeService;
-import com.opex.service.InitiativeUnitService;
+import com.opex.service.InitiativeSiteService;
 import com.opex.service.InitiativeDisciplineService;
 import com.opex.dto.CreateInitiativeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class InitiativeController {
     private InitiativeService initiativeService;
 
     @Autowired
-    private InitiativeUnitService unitService;
+    private InitiativeSiteService siteService;
 
     @Autowired
     private InitiativeDisciplineService disciplineService;
@@ -47,11 +47,11 @@ public class InitiativeController {
     @PostMapping
     public ResponseEntity<Initiative> createInitiative(@RequestBody CreateInitiativeRequest request) {
         try {
-            // Get unit and discipline from lookup tables
-            Optional<InitiativeUnit> unit = unitService.findById(request.getUnitId());
+            // Get site and discipline from lookup tables
+            Optional<InitiativeSite> site = siteService.findById(request.getSiteId());
             Optional<InitiativeDiscipline> discipline = disciplineService.findById(request.getDisciplineId());
             
-            if (!unit.isPresent() || !discipline.isPresent()) {
+            if (!site.isPresent() || !discipline.isPresent()) {
                 return ResponseEntity.badRequest().build();
             }
             
@@ -60,8 +60,7 @@ public class InitiativeController {
             initiative.setTitle(request.getTitle());
             initiative.setDescription(request.getDescription());
             initiative.setCategory(request.getCategory());
-            initiative.setSite(request.getSite());
-            initiative.setUnit(unit.get());
+            initiative.setSite(site.get());
             initiative.setDiscipline(discipline.get());
             initiative.setProposer(request.getProposer());
             initiative.setProposalDate(request.getProposalDate());
@@ -101,9 +100,9 @@ public class InitiativeController {
         return initiativeService.findByStatus(status);
     }
 
-    @GetMapping("/unit/{unitCode}")
-    public List<Initiative> getInitiativesByUnit(@PathVariable String unitCode) {
-        return initiativeService.findByUnitCode(unitCode);
+    @GetMapping("/site/{siteCode}")
+    public List<Initiative> getInitiativesBySite(@PathVariable String siteCode) {
+        return initiativeService.findBySiteCode(siteCode);
     }
 
     @GetMapping("/stats/count/{status}")

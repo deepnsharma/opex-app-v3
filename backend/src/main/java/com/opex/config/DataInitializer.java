@@ -24,7 +24,7 @@ public class DataInitializer implements CommandLineRunner {
     private ProjectService projectService;
 
     @Autowired
-    private InitiativeUnitService unitService;
+    private InitiativeSiteService siteService;
 
     @Autowired
     private InitiativeDisciplineService disciplineService;
@@ -63,15 +63,15 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initializeLookupTables() {
-        // Initialize Initiative Units if empty
-        if (unitService.findAll().isEmpty()) {
-            unitService.save(new InitiativeUnit("NDS", "NDS", "NDS Plant"));
-            unitService.save(new InitiativeUnit("HSD1", "HSD1", "HSD1 Plant"));
-            unitService.save(new InitiativeUnit("HSD2", "HSD2", "HSD2 Plant"));
-            unitService.save(new InitiativeUnit("HSD3", "HSD3", "HSD3 Plant"));
-            unitService.save(new InitiativeUnit("DHJ", "DHJ", "DHJ Plant"));
-            unitService.save(new InitiativeUnit("APL", "APL", "APL Plant"));
-            unitService.save(new InitiativeUnit("TCD", "TCD", "TCD Plant"));
+        // Initialize Initiative Sites if empty
+        if (siteService.findAll().isEmpty()) {
+            siteService.save(new InitiativeSite("NDS", "NDS", "NDS Plant"));
+            siteService.save(new InitiativeSite("HSD1", "HSD1", "HSD1 Plant"));
+            siteService.save(new InitiativeSite("HSD2", "HSD2", "HSD2 Plant"));
+            siteService.save(new InitiativeSite("HSD3", "HSD3", "HSD3 Plant"));
+            siteService.save(new InitiativeSite("DHJ", "DHJ", "DHJ Plant"));
+            siteService.save(new InitiativeSite("APL", "APL", "APL Plant"));
+            siteService.save(new InitiativeSite("TCD", "TCD", "TCD Plant"));
         }
         
         // Initialize Initiative Disciplines if empty
@@ -113,22 +113,21 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createSampleInitiatives() {
         // Get lookup data
-        InitiativeUnit ndsUnit = unitService.findByCode("NDS").orElse(null);
-        InitiativeUnit hsd1Unit = unitService.findByCode("HSD1").orElse(null);
-        InitiativeUnit aplUnit = unitService.findByCode("APL").orElse(null);
+        InitiativeSite ndsSite = siteService.findByCode("NDS").orElse(null);
+        InitiativeSite hsd1Site = siteService.findByCode("HSD1").orElse(null);
+        InitiativeSite aplSite = siteService.findByCode("APL").orElse(null);
         
         InitiativeDiscipline opDiscipline = disciplineService.findByCode("OP").orElse(null);
         InitiativeDiscipline egDiscipline = disciplineService.findByCode("EG").orElse(null);
         InitiativeDiscipline evDiscipline = disciplineService.findByCode("EV").orElse(null);
         
-        if (ndsUnit != null && opDiscipline != null) {
+        if (ndsSite != null && opDiscipline != null) {
             // Initiative 1
             Initiative initiative1 = new Initiative();
             initiative1.setTitle("Energy Efficiency Optimization");
             initiative1.setDescription("Implementing LED lighting and optimizing HVAC systems to reduce energy consumption");
             initiative1.setCategory("Energy");
-            initiative1.setSite("Manufacturing Plant A");
-            initiative1.setUnit(ndsUnit);
+            initiative1.setSite(ndsSite);
             initiative1.setDiscipline(opDiscipline);
             initiative1.setProposer("John Smith");
             initiative1.setProposalDate(LocalDate.of(2025, 1, 15));
@@ -141,14 +140,13 @@ public class DataInitializer implements CommandLineRunner {
             initiativeService.save(initiative1);
         }
         
-        if (hsd1Unit != null && egDiscipline != null) {
+        if (hsd1Site != null && egDiscipline != null) {
             // Initiative 2
             Initiative initiative2 = new Initiative();
             initiative2.setTitle("Waste Reduction Initiative");
             initiative2.setDescription("Implementing lean manufacturing principles to reduce material waste");
             initiative2.setCategory("Waste Management");
-            initiative2.setSite("Manufacturing Plant B");
-            initiative2.setUnit(hsd1Unit);
+            initiative2.setSite(hsd1Site);
             initiative2.setDiscipline(egDiscipline);
             initiative2.setProposer("Emma Davis");
             initiative2.setProposalDate(LocalDate.of(2025, 1, 20));
@@ -162,14 +160,13 @@ public class DataInitializer implements CommandLineRunner {
             initiativeService.save(initiative2);
         }
         
-        if (aplUnit != null && evDiscipline != null) {
+        if (aplSite != null && evDiscipline != null) {
             // Initiative 3
             Initiative initiative3 = new Initiative();
             initiative3.setTitle("Process Automation");
             initiative3.setDescription("Automating manual processes to improve efficiency and reduce errors");
             initiative3.setCategory("Automation");
-            initiative3.setSite("Manufacturing Plant C");
-            initiative3.setUnit(aplUnit);
+            initiative3.setSite(aplSite);
             initiative3.setDiscipline(evDiscipline);
             initiative3.setProposer("Mike Chen");
             initiative3.setProposalDate(LocalDate.of(2025, 2, 1));

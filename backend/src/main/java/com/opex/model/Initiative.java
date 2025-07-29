@@ -28,13 +28,10 @@ public class Initiative {
     @NotBlank
     private String category;
 
-    @NotBlank
-    private String site;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "unit_id", nullable = false)
+    @JoinColumn(name = "site_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private InitiativeUnit unit;
+    private InitiativeSite site;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "discipline_id", nullable = false)
@@ -103,11 +100,8 @@ public class Initiative {
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
-    public String getSite() { return site; }
-    public void setSite(String site) { this.site = site; }
-
-    public InitiativeUnit getUnit() { return unit; }
-    public void setUnit(InitiativeUnit unit) { this.unit = unit; }
+    public InitiativeSite getSite() { return site; }
+    public void setSite(InitiativeSite site) { this.site = site; }
 
     public InitiativeDiscipline getDiscipline() { return discipline; }
     public void setDiscipline(InitiativeDiscipline discipline) { this.discipline = discipline; }

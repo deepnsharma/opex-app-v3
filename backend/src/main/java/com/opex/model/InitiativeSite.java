@@ -4,9 +4,9 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
-@Table(name = "initiative_units")
+@Table(name = "initiative_site")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class InitiativeUnit {
+public class InitiativeSite {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,9 +20,9 @@ public class InitiativeUnit {
     @Column(length = 255)
     private String description;
 
-    public InitiativeUnit() {}
+    public InitiativeSite() {}
 
-    public InitiativeUnit(String code, String name, String description) {
+    public InitiativeSite(String code, String name, String description) {
         this.code = code;
         this.name = name;
         this.description = description;

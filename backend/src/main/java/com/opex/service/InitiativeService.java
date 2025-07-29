@@ -1,7 +1,7 @@
 package com.opex.service;
 
 import com.opex.model.Initiative;
-import com.opex.model.InitiativeUnit;
+import com.opex.model.InitiativeSite;
 import com.opex.model.InitiativeDiscipline;
 import com.opex.model.WorkflowStep;
 import com.opex.repository.InitiativeRepository;
@@ -60,29 +60,29 @@ public class InitiativeService {
         // AB = Category-specific sequential number for site (01, 02...)
         // 123 = Overall site-specific initiative number (001, 002...)
         
-        String unitCode = initiative.getUnit().getCode();
+        String siteCode = initiative.getSite().getCode();
         String year = String.valueOf(LocalDateTime.now().getYear()).substring(2); // Last 2 digits
         String disciplineCode = initiative.getDiscipline().getCode();
         
-        // Get count for this unit and discipline combination in current year
-        Long disciplineCount = getNextDisciplineSequence(unitCode, disciplineCode, Integer.parseInt("20" + year));
+        // Get count for this site and discipline combination in current year
+        Long disciplineCount = getNextDisciplineSequence(siteCode, disciplineCode, Integer.parseInt("20" + year));
         String disciplineSeq = String.format("%02d", disciplineCount);
         
-        // Get overall count for this unit in current year
-        Long overallCount = getNextOverallSequence(unitCode, Integer.parseInt("20" + year));
+        // Get overall count for this site in current year
+        Long overallCount = getNextOverallSequence(siteCode, Integer.parseInt("20" + year));
         String overallSeq = String.format("%03d", overallCount);
         
-        return String.format("%s/%s/%s/%s/%s", unitCode, year, disciplineCode, disciplineSeq, overallSeq);
+        return String.format("%s/%s/%s/%s/%s", siteCode, year, disciplineCode, disciplineSeq, overallSeq);
     }
 
-    private Long getNextDisciplineSequence(String unitCode, String disciplineCode, int year) {
-        // Count initiatives for this unit-discipline combination in the current year
-        return initiativeRepository.countByUnitCodeAndDisciplineCodeAndYear(unitCode, disciplineCode, year) + 1;
+    private Long getNextDisciplineSequence(String siteCode, String disciplineCode, int year) {
+        // Count initiatives for this site-discipline combination in the current year
+        return initiativeRepository.countBySiteCodeAndDisciplineCodeAndYear(siteCode, disciplineCode, year) + 1;
     }
 
-    private Long getNextOverallSequence(String unitCode, int year) {
-        // Count all initiatives for this unit in the current year
-        return initiativeRepository.countByUnitCodeAndYear(unitCode, year) + 1;
+    private Long getNextOverallSequence(String siteCode, int year) {
+        // Count all initiatives for this site in the current year
+        return initiativeRepository.countBySiteCodeAndYear(siteCode, year) + 1;
     }
 
     private void createInitialWorkflowSteps(Initiative initiative) {
@@ -103,8 +103,8 @@ public class InitiativeService {
         return initiativeRepository.findByStatus(status);
     }
 
-    public List<Initiative> findByUnitCode(String unitCode) {
-        return initiativeRepository.findByUnitCode(unitCode);
+    public List<Initiative> findBySiteCode(String siteCode) {
+        return initiativeRepository.findBySiteCode(siteCode);
     }
 
     public Long countByStatus(String status) {

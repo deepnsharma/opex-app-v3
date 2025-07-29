@@ -10,11 +10,10 @@ import java.util.Optional;
 @Repository
 public interface InitiativeRepository extends JpaRepository<Initiative, Long> {
     Optional<Initiative> findByInitiativeId(String initiativeId);
-    List<Initiative> findBySite(String site);
     List<Initiative> findByStatus(String status);
     
-    @Query("SELECT i FROM Initiative i WHERE i.unit.code = ?1")
-    List<Initiative> findByUnitCode(String unitCode);
+    @Query("SELECT i FROM Initiative i WHERE i.site.code = ?1")
+    List<Initiative> findBySiteCode(String siteCode);
     
     @Query("SELECT COUNT(i) FROM Initiative i WHERE i.status = ?1")
     Long countByStatus(String status);
@@ -22,9 +21,9 @@ public interface InitiativeRepository extends JpaRepository<Initiative, Long> {
     @Query("SELECT SUM(i.estimatedSavings) FROM Initiative i WHERE i.status = 'APPROVED'")
     Double getTotalExpectedValue();
     
-    @Query("SELECT COUNT(i) FROM Initiative i WHERE i.unit.code = ?1 AND i.discipline.code = ?2 AND YEAR(i.proposalDate) = ?3")
-    Long countByUnitCodeAndDisciplineCodeAndYear(String unitCode, String disciplineCode, int year);
+    @Query("SELECT COUNT(i) FROM Initiative i WHERE i.site.code = ?1 AND i.discipline.code = ?2 AND YEAR(i.proposalDate) = ?3")
+    Long countBySiteCodeAndDisciplineCodeAndYear(String siteCode, String disciplineCode, int year);
  
-    @Query("SELECT COUNT(i) FROM Initiative i WHERE i.unit.code = ?1 AND YEAR(i.proposalDate) = ?2")
-    Long countByUnitCodeAndYear(String unitCode, int year);
+    @Query("SELECT COUNT(i) FROM Initiative i WHERE i.site.code = ?1 AND YEAR(i.proposalDate) = ?2")
+    Long countBySiteCodeAndYear(String siteCode, int year);
 }

@@ -7,8 +7,7 @@ public class CreateInitiativeRequest {
     private String title;
     private String description;
     private String category;
-    private String site;
-    private Long unitId;
+    private Long siteId;
     private Long disciplineId;
     private String proposer;
     private LocalDate proposalDate;
@@ -28,11 +27,8 @@ public class CreateInitiativeRequest {
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
-    public String getSite() { return site; }
-    public void setSite(String site) { this.site = site; }
-
-    public Long getUnitId() { return unitId; }
-    public void setUnitId(Long unitId) { this.unitId = unitId; }
+    public Long getSiteId() { return siteId; }
+    public void setSiteId(Long siteId) { this.siteId = siteId; }
 
     public Long getDisciplineId() { return disciplineId; }
     public void setDisciplineId(Long disciplineId) { this.disciplineId = disciplineId; }
