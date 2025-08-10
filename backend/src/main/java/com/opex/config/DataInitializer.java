@@ -5,11 +5,13 @@ import com.opex.repository.*;
 import com.opex.service.UserService;
 import com.opex.service.RoleService;
 import com.opex.service.StageService;
+import com.opex.service.InitiativeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -32,7 +34,7 @@ public class DataInitializer implements CommandLineRunner {
     private StageService stageService;
 
     @Autowired
-    private InitiativeRepository initiativeRepository;
+    private InitiativeService initiativeService;
 
     @Autowired
     private WorkflowStepRepository workflowStepRepository;
@@ -40,10 +42,16 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private KPIRepository kpiRepository;
 
+    @Autowired
+    private InitiativeDisciplineRepository disciplineRepository;
+
     @Override
     public void run(String... args) throws Exception {
         // Initialize sites
         initializeSites();
+        
+        // Initialize disciplines
+        initializeDisciplines();
         
         // Initialize roles
         initializeRoles();
@@ -56,9 +64,6 @@ public class DataInitializer implements CommandLineRunner {
         
         // Initialize initiatives
         initializeInitiatives();
-        
-        // Initialize workflow steps
-        initializeWorkflowSteps();
         
         // Initialize KPIs
         initializeKPIs();
@@ -77,6 +82,22 @@ public class DataInitializer implements CommandLineRunner {
             );
             siteRepository.saveAll(sites);
             System.out.println("Initialized " + sites.size() + " sites.");
+        }
+    }
+
+    private void initializeDisciplines() {
+        if (disciplineRepository.count() == 0) {
+            List<InitiativeDiscipline> disciplines = Arrays.asList(
+                new InitiativeDiscipline("MX", "Maintenance", "Maintenance related initiatives for equipment and facility upkeep"),
+                new InitiativeDiscipline("PR", "Production", "Production efficiency and process improvement initiatives"),
+                new InitiativeDiscipline("QA", "Quality Assurance", "Quality improvement and assurance initiatives"),
+                new InitiativeDiscipline("SF", "Safety", "Safety enhancement and risk reduction initiatives"),
+                new InitiativeDiscipline("EN", "Energy", "Energy efficiency and conservation initiatives"),
+                new InitiativeDiscipline("EV", "Environment", "Environmental protection and sustainability initiatives"),
+                new InitiativeDiscipline("IT", "Information Technology", "IT system improvement and digitalization initiatives")
+            );
+            disciplineRepository.saveAll(disciplines);
+            System.out.println("Initialized " + disciplines.size() + " disciplines.");
         }
     }
 
@@ -165,96 +186,71 @@ public class DataInitializer implements CommandLineRunner {
             }
             
             // Create corporate user (CTSD)
-            Role ctsdRole = roleService.findByCode("CTSD").get(0);
-            User ctsdUser = new User(
-                "corp_ctsd",
-                "corp_ctsd@godeepak.com",
-                "password123",
-                "Corporate",
-                "TSD",
-                ctsdRole,
-                "CORP",
-                "Corporate"
-            );
-            userService.save(ctsdUser);
+            List<Role> ctsdRoles = roleService.findByCode("CTSD");
+            if (!ctsdRoles.isEmpty()) {
+                Role ctsdRole = ctsdRoles.get(0);
+                User ctsdUser = new User(
+                    "corp_ctsd",
+                    "corp_ctsd@godeepak.com",
+                    "password123",
+                    "Corporate",
+                    "TSD",
+                    ctsdRole,
+                    "CORP",
+                    "Corporate"
+                );
+                userService.save(ctsdUser);
+            }
 
             System.out.println("Initialized users for all sites and roles.");
         }
     }
 
     private void initializeInitiatives() {
-        if (initiativeRepository.count() == 0) {
+        if (initiativeService.findAll().size() == 0) {
             List<InitiativeSite> sites = siteRepository.findAll();
+            List<InitiativeDiscipline> disciplines = disciplineRepository.findAll();
             Random random = new Random();
 
             for (InitiativeSite site : sites) {
-                // Create 3-5 initiatives per site
-                int initiativeCount = 3 + random.nextInt(3);
+                // Create 2-3 initiatives per site
+                int initiativeCount = 2 + random.nextInt(2);
                 for (int i = 1; i <= initiativeCount; i++) {
                     Initiative initiative = new Initiative();
                     initiative.setTitle("Cost Reduction Initiative " + i + " - " + site.getCode());
                     initiative.setDescription("Initiative to reduce operational costs in " + site.getName());
-                    initiative.setSiteCode(site.getCode());
-                    initiative.setSiteName(site.getName());
+                    initiative.setCategory("COST_REDUCTION");
                     
-                    // Find STLD for this site
-                    Optional<Role> stldRole = roleService.findByCodeAndSite("STLD", site.getCode());
-                    if (stldRole.isPresent()) {
-                        initiative.setInitiator(site.getCode().toLowerCase() + "_stld@godeepak.com");
+                    // Set site and discipline
+                    initiative.setSite(site);
+                    if (!disciplines.isEmpty()) {
+                        initiative.setDiscipline(disciplines.get(random.nextInt(disciplines.size())));
                     }
                     
-                    initiative.setCurrentStage("submitted");
-                    initiative.setStatus("active");
-                    initiative.setTargetSavings(100000.0 + random.nextDouble() * 500000.0);
-                    initiative.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(90)));
-                    initiativeRepository.save(initiative);
+                    // Find STLD for this site and set as proposer
+                    Optional<Role> stldRole = roleService.findByCodeAndSite("STLD", site.getCode());
+                    if (stldRole.isPresent()) {
+                        initiative.setProposer(site.getCode().toLowerCase() + "_stld@godeepak.com");
+                    }
+                    
+                    initiative.setStatus("PROPOSED");
+                    initiative.setPriority("MEDIUM");
+                    initiative.setBudgetType("BUDGETED");
+                    initiative.setEstimatedSavings(new BigDecimal(100000.0 + random.nextDouble() * 500000.0));
+                    initiative.setProposalDate(LocalDate.now().minusDays(random.nextInt(30)));
+                    initiative.setExpectedClosureDate(LocalDate.now().plusDays(90 + random.nextInt(180)));
+                    
+                    // Use InitiativeService.save() instead of repository.save() 
+                    // This ensures initiativeId is generated properly
+                    try {
+                        initiativeService.save(initiative);
+                    } catch (Exception e) {
+                        System.err.println("Failed to save initiative: " + e.getMessage());
+                        e.printStackTrace();
+                    }
                 }
             }
             System.out.println("Initialized initiatives for all sites.");
-        }
-    }
-
-    private void initializeWorkflowSteps() {
-        if (workflowStepRepository.count() == 0) {
-            List<Initiative> initiatives = initiativeRepository.findAll();
-            List<Stage> stages = stageService.findAllActiveOrdered();
-            Random random = new Random();
-
-            String[] statuses = {"completed", "pending", "approved"};
-
-            for (Initiative initiative : initiatives) {
-                // Create 2-4 workflow steps per initiative
-                int stepCount = 2 + random.nextInt(3);
-                for (int i = 0; i < stepCount && i < stages.size(); i++) {
-                    WorkflowStep step = new WorkflowStep();
-                    step.setInitiative(initiative);
-                    step.setStage(stages.get(i));
-                    step.setStepNumber(i + 1);
-                    step.setStatus(i < stepCount - 1 ? "completed" : statuses[random.nextInt(statuses.length)]);
-                    step.setApprover(initiative.getSiteCode().toLowerCase() + "_sh@godeepak.com");
-                    step.setApprovalDate(i < stepCount - 1 ? 
-                        LocalDateTime.now().minusDays(random.nextInt(30)) : null);
-                    step.setComments("Step " + (i + 1) + " processed for " + initiative.getTitle());
-                    
-                    // Set MOC/CAPEX details for relevant stages
-                    if (stages.get(i).getRequiresMoc() != null && stages.get(i).getRequiresMoc()) {
-                        step.setMocRequired(random.nextBoolean());
-                        if (step.getMocRequired()) {
-                            step.setMocNumber("MOC-" + initiative.getSiteCode() + "-" + (1000 + random.nextInt(9000)));
-                        }
-                    }
-                    
-                    if (stages.get(i).getRequiresCapex() != null && stages.get(i).getRequiresCapex()) {
-                        step.setCapexRequired(random.nextBoolean());
-                        if (step.getCapexRequired()) {
-                            step.setCapexDetails("CAPEX approval for " + (10000 + random.nextInt(90000)) + " USD");
-                        }
-                    }
-                    
-                    workflowStepRepository.save(step);
-                }
-            }
-            System.out.println("Initialized workflow steps for all initiatives.");
         }
     }
 

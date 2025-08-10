@@ -85,7 +85,12 @@ export const lookupAPI = {
   getSiteByCode: (code) => api.get(`/initiative-sites/code/${code}`),
   getDisciplines: () => api.get('/initiative-disciplines'),
   getDisciplineById: (id) => api.get(`/initiative-disciplines/${id}`),
-  getDisciplineByCode: (code) => api.get(`/initiative-disciplines/code/${code}`)
+  getDisciplineByCode: (code) => api.get(`/initiative-disciplines/code/${code}`),
+  
+  // Role APIs
+  getRoles: () => api.get('/roles'),
+  getRolesBySite: (siteCode) => api.get(`/roles/site/${siteCode}`),
+  getRolesByCode: (code) => api.get(`/roles/code/${code}`)
 };
 
 // Workflow APIs

@@ -4,6 +4,7 @@ import com.opex.model.Initiative;
 import com.opex.model.InitiativeSite;
 import com.opex.model.InitiativeDiscipline;
 import com.opex.model.WorkflowStep;
+import com.opex.model.Stage;
 import com.opex.repository.InitiativeRepository;
 import com.opex.repository.WorkflowStepRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class InitiativeService {
 
     @Autowired
     private WorkflowStepRepository workflowStepRepository;
+
+    @Autowired
+    private StageService stageService;
 
     public List<Initiative> findAll() {
         return initiativeRepository.findAll();
@@ -86,16 +90,42 @@ public class InitiativeService {
     }
 
     private void createInitialWorkflowSteps(Initiative initiative) {
-        String[] stages = {"Site TSD", "Unit Head", "Corporate TSD", "CMO"};
-        String[] approvers = {"Site TSD Team", "Unit Head", "Corporate TSD", "CMO"};
+        // Get the first 7 stages (as per requirement to work till step 7)
+        List<Stage> stages = stageService.findAllActiveOrdered();
+        if (stages.size() > 7) {
+            stages = stages.subList(0, 7);
+        }
         
-        for (int i = 0; i < stages.length; i++) {
+        for (int i = 0; i < stages.size(); i++) {
+            Stage stage = stages.get(i);
             WorkflowStep step = new WorkflowStep();
             step.setInitiative(initiative);
-            step.setStage(stages[i]);
-            step.setApprover(approvers[i]);
+            step.setStage(stage); // Now using Stage object instead of String
+            step.setStepNumber(i + 1);
+            step.setApprover(getApproverForStage(stage, initiative));
             step.setStatus(i == 0 ? "pending" : "waiting");
             workflowStepRepository.save(step);
+        }
+    }
+
+    private String getApproverForStage(Stage stage, Initiative initiative) {
+        // Map stage role codes to actual approver emails
+        String siteCode = initiative.getSite().getCode().toLowerCase();
+        String roleCode = stage.getRoleCode();
+        
+        switch (roleCode) {
+            case "STLD":
+                return siteCode + "_stld@godeepak.com";
+            case "SH":
+                return siteCode + "_sh@godeepak.com";
+            case "EH":
+                return siteCode + "_eh@godeepak.com";
+            case "IL":
+                return siteCode + "_il@godeepak.com";
+            case "CTSD":
+                return "corp_ctsd@godeepak.com";
+            default:
+                return siteCode + "_stld@godeepak.com";
         }
     }
 

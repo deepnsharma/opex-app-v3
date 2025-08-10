@@ -5,14 +5,17 @@ import com.opex.dto.JwtResponse;
 import com.opex.dto.LoginRequest;
 import com.opex.dto.MessageResponse;
 import com.opex.dto.SignupRequest;
+import com.opex.model.InitiativeSite;
 import com.opex.model.Role;
 import com.opex.model.User;
+import com.opex.service.InitiativeSiteService;
 import com.opex.service.RoleService;
 import com.opex.service.UserService;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -25,6 +28,9 @@ public class AuthController {
 
     @Autowired
     private RoleService roleService;
+
+    @Autowired
+    private InitiativeSiteService siteService;
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -58,46 +64,49 @@ public class AuthController {
                     .body(new MessageResponse("Error: Email must be from @godeepak.com domain!"));
         }
 
-        // Validate password confirmation
-        if (!signUpRequest.getPassword().equals(signUpRequest.getConfirmPassword())) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Passwords do not match!"));
-        }
-
-        if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
-        }
-
         if (userService.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        // Get role from database
-        Optional<Role> roleOpt = roleService.findById(signUpRequest.getRoleId());
+        // Generate username from email if not provided
+        String username = signUpRequest.getUsername();
+        if (username == null || username.trim().isEmpty()) {
+            username = signUpRequest.getEmail().split("@")[0];
+        }
+
+        if (userService.existsByUsername(username)) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Username is already taken!"));
+        }
+
+        // Get site by ID
+        Optional<InitiativeSite> siteOpt = siteService.findById(signUpRequest.getSiteId());
+        if (!siteOpt.isPresent()) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Invalid site selected!"));
+        }
+
+        InitiativeSite site = siteOpt.get();
+
+        // Find role by code and site
+        Optional<Role> roleOpt = roleService.findByCodeAndSite(signUpRequest.getRoleCode(), site.getCode());
         if (!roleOpt.isPresent()) {
             return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Invalid role selected!"));
+                    .body(new MessageResponse("Error: Invalid role selected for this site!"));
         }
 
         Role role = roleOpt.get();
-        
-        // Validate that the role belongs to the selected site
-        if (!role.getSiteCode().equals(signUpRequest.getSiteCode())) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Role does not belong to selected site!"));
-        }
 
         User user = new User(
-            signUpRequest.getUsername(),
+            username,
             signUpRequest.getEmail(),
             signUpRequest.getPassword(),
             signUpRequest.getFirstName(),
             signUpRequest.getLastName(),
             role,
-            signUpRequest.getSiteCode(),
-            signUpRequest.getSiteName()
+            site.getCode(),
+            site.getName()
         );
 
         userService.save(user);

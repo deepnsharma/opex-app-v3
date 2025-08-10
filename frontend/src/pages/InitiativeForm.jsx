@@ -7,14 +7,15 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Slider } from '../components/ui/slider';
-import { Calendar, CalendarIcon, Upload, X, FileText, Save, Send } from 'lucide-react';
+import { Upload, X, FileText, Save, Send } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { initiativeAPI, lookupAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const InitiativeForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
   const [sites, setSites] = useState([]);
@@ -22,18 +23,16 @@ const InitiativeForm = () => {
   
   const [formData, setFormData] = useState({
     title: '',
-    initiator: '',
-    siteId: '',
+    siteId: user?.site || '',
     disciplineId: '',
     budgetType: '',
-    date: '',
     description: '',
     baselineData: '',
     targetOutcome: '',
     expectedValue: '',
-    confidence: [75],
-    assumptions: ['', '', ''],
     estimatedCapex: '',
+    priority: 'MEDIUM',
+    category: 'COST_REDUCTION'
   });
 
   // Load lookup data on component mount
@@ -45,8 +44,16 @@ const InitiativeForm = () => {
           lookupAPI.getDisciplines()
         ]);
         
-        setSites(sitesResponse.data);
-        setDisciplines(disciplinesResponse.data);
+        setSites(sitesResponse.data || []);
+        setDisciplines(disciplinesResponse.data || []);
+        
+        // Pre-select user's site if available
+        if (user?.site && sitesResponse.data) {
+          const userSite = sitesResponse.data.find(site => site.code === user.site);
+          if (userSite) {
+            setFormData(prev => ({ ...prev, siteId: userSite.id.toString() }));
+          }
+        }
       } catch (error) {
         console.error('Error loading lookup data:', error);
         toast({
@@ -58,16 +65,10 @@ const InitiativeForm = () => {
     };
 
     loadLookupData();
-  }, [toast]);
+  }, [toast, user]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleAssumptionChange = (index, value) => {
-    const newAssumptions = [...formData.assumptions];
-    newAssumptions[index] = value;
-    setFormData(prev => ({ ...prev, assumptions: newAssumptions }));
   };
 
   const handleFileUpload = (e) => {
@@ -94,44 +95,74 @@ const InitiativeForm = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleSubmit = async (e, action = 'draft') => {
+  const validateForm = () => {
+    const required = ['title', 'siteId', 'disciplineId', 'description', 'expectedValue'];
+    const missing = required.filter(field => !formData[field]?.toString().trim());
+    
+    if (missing.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (parseFloat(formData.expectedValue) <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Expected savings must be greater than 0.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e, action = 'submit') => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setLoading(true);
 
+    // Find selected site and discipline objects
+    const selectedSite = sites.find(s => s.id.toString() === formData.siteId);
+    const selectedDiscipline = disciplines.find(d => d.id.toString() === formData.disciplineId);
+
     const initiativeData = {
-      title: formData.title,
-      description: formData.description,
-      category: 'Operational Excellence', // Default category
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      category: formData.category,
       siteId: parseInt(formData.siteId),
       disciplineId: parseInt(formData.disciplineId),
-      proposer: formData.initiator,
-      proposalDate: formData.date,
-      expectedClosureDate: formData.date, // You can add another field for this
-      estimatedSavings: parseFloat(formData.expectedValue) || 0,
-      priority: formData.confidence[0] > 80 ? 'HIGH' : formData.confidence[0] > 60 ? 'MEDIUM' : 'LOW',
-      budgetType: formData.budgetType,
-      comments: `Baseline: ${formData.baselineData}. Target: ${formData.targetOutcome}. Confidence: ${formData.confidence[0]}%`
+      proposer: user?.email || 'system@godeepak.com',
+      proposalDate: new Date().toISOString().split('T')[0], // Today's date
+      expectedClosureDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
+      estimatedSavings: parseFloat(formData.expectedValue),
+      priority: formData.priority,
+      budgetType: formData.budgetType || 'BUDGETED',
+      comments: `Baseline: ${formData.baselineData || 'Not specified'}. Target: ${formData.targetOutcome || 'Not specified'}.`
     };
 
     try {
-      // Call the actual API
       const response = await initiativeAPI.create(initiativeData);
-      console.log('API Response:', response);
+      console.log('Initiative created:', response);
 
       toast({
-        title: action === 'submit' ? "Initiative Submitted!" : "Draft Saved!",
-        description: "Your initiative has been successfully saved to the server.",
+        title: "Initiative Submitted Successfully!",
+        description: `Your initiative "${formData.title}" has been submitted and will enter the approval workflow starting with Site TSD Lead.`,
       });
 
-      if (action === 'submit') {
-        navigate('/workflow');
-      }
+      // Navigate to workflow page to see the submitted initiative
+      navigate('/workflow');
 
     } catch (error) {
-      console.error("API Error:", error);
+      console.error("Submission Error:", error);
       toast({
-        title: "Error",
-        description: "Failed to save the initiative. Please try again.",
+        title: "Submission Failed",
+        description: error.response?.data?.message || "Failed to submit the initiative. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -145,7 +176,7 @@ const InitiativeForm = () => {
         <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-blue-50">
           <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold">New OpEx Initiative</CardTitle>
-            <p className="text-blue-100">Complete all sections to submit your operational excellence initiative</p>
+            <p className="text-blue-100">Submit your operational excellence initiative for approval workflow (Steps 1-7)</p>
           </CardHeader>
           
           <CardContent className="p-8">
@@ -157,25 +188,13 @@ const InitiativeForm = () => {
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="title" className="text-slate-700 font-medium">Initiative Title *</Label>
                     <Input
                       id="title"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
-                      placeholder="Enter initiative title"
-                      className="h-12 border-slate-300 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="initiator" className="text-slate-700 font-medium">Initiator Name *</Label>
-                    <Input
-                      id="initiator"
-                      value={formData.initiator}
-                      onChange={(e) => handleInputChange('initiator', e.target.value)}
-                      placeholder="Enter your name"
+                      placeholder="Enter a clear and descriptive title"
                       className="h-12 border-slate-300 focus:border-blue-500"
                       required
                     />
@@ -183,9 +202,9 @@ const InitiativeForm = () => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="site" className="text-slate-700 font-medium">Site *</Label>
-                    <Select onValueChange={(value) => handleInputChange('siteId', value)}>
+                    <Select value={formData.siteId} onValueChange={(value) => handleInputChange('siteId', value)}>
                       <SelectTrigger className="h-12 border-slate-300">
-                        <SelectValue placeholder="Select site" />
+                        <SelectValue placeholder="Select your site" />
                       </SelectTrigger>
                       <SelectContent>
                         {sites.map(site => (
@@ -199,7 +218,7 @@ const InitiativeForm = () => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="discipline" className="text-slate-700 font-medium">Discipline *</Label>
-                    <Select onValueChange={(value) => handleInputChange('disciplineId', value)}>
+                    <Select value={formData.disciplineId} onValueChange={(value) => handleInputChange('disciplineId', value)}>
                       <SelectTrigger className="h-12 border-slate-300">
                         <SelectValue placeholder="Select discipline" />
                       </SelectTrigger>
@@ -214,25 +233,44 @@ const InitiativeForm = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="date" className="text-slate-700 font-medium">Initiative Date *</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => handleInputChange('date', e.target.value)}
-                      className="h-12 border-slate-300 focus:border-blue-500"
-                      required
-                    />
+                    <Label htmlFor="category" className="text-slate-700 font-medium">Category *</Label>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                      <SelectTrigger className="h-12 border-slate-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="COST_REDUCTION">Cost Reduction</SelectItem>
+                        <SelectItem value="PRODUCTIVITY">Productivity Improvement</SelectItem>
+                        <SelectItem value="QUALITY">Quality Enhancement</SelectItem>
+                        <SelectItem value="SAFETY">Safety Improvement</SelectItem>
+                        <SelectItem value="ENVIRONMENT">Environmental</SelectItem>
+                        <SelectItem value="ENERGY">Energy Efficiency</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="priority" className="text-slate-700 font-medium">Priority *</Label>
+                    <Select value={formData.priority} onValueChange={(value) => handleInputChange('priority', value)}>
+                      <SelectTrigger className="h-12 border-slate-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="HIGH">High</SelectItem>
+                        <SelectItem value="MEDIUM">Medium</SelectItem>
+                        <SelectItem value="LOW">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-slate-700 font-medium">Description *</Label>
+                  <Label htmlFor="description" className="text-slate-700 font-medium">Initiative Description *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Provide a detailed description of the initiative..."
+                    placeholder="Provide a detailed description of the initiative, its objectives, and expected outcomes..."
                     className="min-h-32 border-slate-300 focus:border-blue-500"
                     required
                   />
@@ -240,7 +278,7 @@ const InitiativeForm = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="budgetType" className="text-slate-700 font-medium">Budget Type *</Label>
-                  <Select onValueChange={(value) => handleInputChange('budgetType', value)}>
+                  <Select value={formData.budgetType} onValueChange={(value) => handleInputChange('budgetType', value)}>
                     <SelectTrigger className="h-12 border-slate-300">
                       <SelectValue placeholder="Select Budget Type" />
                     </SelectTrigger>
@@ -260,26 +298,24 @@ const InitiativeForm = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="baseline" className="text-slate-700 font-medium">Baseline Data (12-month historical) *</Label>
+                    <Label htmlFor="baseline" className="text-slate-700 font-medium">Current Baseline Data</Label>
                     <Textarea
                       id="baseline"
                       value={formData.baselineData}
                       onChange={(e) => handleInputChange('baselineData', e.target.value)}
-                      placeholder="Enter 12-month historical data and metrics..."
+                      placeholder="Describe current state, historical data, and metrics..."
                       className="min-h-24 border-slate-300 focus:border-blue-500"
-                      required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="target" className="text-slate-700 font-medium">Target Outcome *</Label>
+                    <Label htmlFor="target" className="text-slate-700 font-medium">Target Outcome</Label>
                     <Textarea
                       id="target"
                       value={formData.targetOutcome}
                       onChange={(e) => handleInputChange('targetOutcome', e.target.value)}
-                      placeholder="Describe expected outcomes and targets..."
+                      placeholder="Describe expected outcomes and improvement targets..."
                       className="min-h-24 border-slate-300 focus:border-blue-500"
-                      required
                     />
                   </div>
                 </div>
@@ -293,14 +329,16 @@ const InitiativeForm = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="expectedValue" className="text-slate-700 font-medium">Expected Value (₹) *</Label>
+                    <Label htmlFor="expectedValue" className="text-slate-700 font-medium">Expected Annual Savings (₹) *</Label>
                     <Input
                       id="expectedValue"
                       type="number"
                       value={formData.expectedValue}
                       onChange={(e) => handleInputChange('expectedValue', e.target.value)}
-                      placeholder="Expected financial benefit"
+                      placeholder="0"
                       className="h-12 border-slate-300 focus:border-blue-500"
+                      min="0"
+                      step="0.01"
                       required
                     />
                   </div>
@@ -312,51 +350,15 @@ const InitiativeForm = () => {
                       type="number"
                       value={formData.estimatedCapex}
                       onChange={(e) => handleInputChange('estimatedCapex', e.target.value)}
-                      placeholder="Capital expenditure required"
+                      placeholder="0 (if no CAPEX required)"
                       className="h-12 border-slate-300 focus:border-blue-500"
+                      min="0"
+                      step="0.01"
                     />
+                    <p className="text-sm text-slate-500">
+                      Leave blank or enter 0 if no capital expenditure is required
+                    </p>
                   </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <Label className="text-slate-700 font-medium">Confidence Level: {formData.confidence[0]}%</Label>
-                  <div className="px-4">
-                    <Slider
-                      value={formData.confidence}
-                      onValueChange={(value) => handleInputChange('confidence', value)}
-                      max={100}
-                      min={0}
-                      step={5}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-slate-500 mt-1">
-                      <span>0% - Low</span>
-                      <span>50% - Medium</span>
-                      <span>100% - High</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Key Assumptions */}
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-slate-800 border-b-2 border-blue-200 pb-2">
-                  Key Assumptions
-                </h3>
-                
-                <div className="space-y-4">
-                  {[0, 1, 2].map((index) => (
-                    <div key={index} className="space-y-2">
-                      <Label className="text-slate-700 font-medium">Assumption {index + 1} *</Label>
-                      <Input
-                        value={formData.assumptions[index]}
-                        onChange={(e) => handleAssumptionChange(index, e.target.value)}
-                        placeholder={`Enter key assumption ${index + 1}...`}
-                        className="h-12 border-slate-300 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                  ))}
                 </div>
               </div>
 
@@ -416,26 +418,32 @@ const InitiativeForm = () => {
                 </div>
               </div>
 
+              {/* Workflow Information */}
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h4 className="font-medium text-blue-800 mb-2">Next Steps - Approval Workflow</h4>
+                <p className="text-sm text-blue-600 mb-3">
+                  Once submitted, your initiative will go through the following approval process:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-600">
+                  <div>• Step 1: Site TSD Lead Registration</div>
+                  <div>• Step 2: Site Head Approval</div>
+                  <div>• Step 3: Engineering Head - Define Responsibilities</div>
+                  <div>• Step 4: Initiative Lead - MOC Assessment</div>
+                  <div>• Step 5: Initiative Lead - MOC Process</div>
+                  <div>• Step 6: Initiative Lead - CAPEX Assessment</div>
+                  <div>• Step 7: Site TSD Lead - CAPEX Process</div>
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={(e) => handleSubmit(e, 'draft')}
-                  disabled={loading}
-                  className="flex-1 h-12 text-slate-700 border-slate-300 hover:bg-slate-50"
-                >
-                  <Save className="mr-2 h-5 w-5" />
-                  Save as Draft
-                </Button>
-                
                 <Button
                   type="submit"
                   disabled={loading}
                   className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
                 >
                   <Send className="mr-2 h-5 w-5" />
-                  {loading ? 'Submitting...' : 'Submit Initiative'}
+                  {loading ? 'Submitting Initiative...' : 'Submit Initiative for Approval'}
                 </Button>
               </div>
             </form>

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { Button } from '../components/ui/button.jsx';
 import { Input } from '../components/ui/input.jsx';
 import { Label } from '../components/ui/label.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card.jsx';
 import { Alert, AlertDescription } from '../components/ui/alert.jsx';
-import { Factory, Shield, Users, TrendingUp, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { Factory, Shield, Users, TrendingUp, ChevronRight, Eye, EyeOff, UserPlus } from 'lucide-react';
 
 const Login = () => {
   const { user, login } = useAuth();
@@ -38,7 +38,7 @@ const Login = () => {
   };
 
   const demoLogin = () => {
-    setFormData({ email: 'demo@opex.com', password: 'demo123' });
+    setFormData({ email: 'nds_stld@godeepak.com', password: 'password123' });
   };
 
   return (
@@ -177,7 +177,7 @@ const Login = () => {
                     onChange={handleChange}
                     required
                     className="h-12 border-slate-300 focus:border-blue-500 focus:ring-blue-500/20 bg-white/80 backdrop-blur-sm transition-all duration-300"
-                    placeholder="Enter your email address"
+                    placeholder="Enter your @godeepak.com email"
                   />
                 </div>
 
@@ -236,6 +236,27 @@ const Login = () => {
                   )}
                 </Button>
 
+                {/* Create Account Section */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-slate-300" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-slate-500">New to OpEx Hub?</span>
+                  </div>
+                </div>
+
+                <Link to="/register">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-12 border-2 border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 font-medium"
+                  >
+                    <UserPlus className="h-5 w-5 mr-2" />
+                    Create New Account
+                  </Button>
+                </Link>
+
                 {/* Demo Login Button */}
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -253,13 +274,17 @@ const Login = () => {
                   className="w-full h-12 border-slate-300 text-slate-700 hover:bg-slate-50 transition-all duration-300"
                 >
                   <Users className="h-5 w-5 mr-2" />
-                  Demo Login
+                  Demo Login (NDS Site TSD Lead)
                 </Button>
               </form>
 
-              <div className="text-center text-xs text-slate-500 pt-4">
+              {/* Additional Help Text */}
+              <div className="text-center text-sm text-slate-600 pt-4 space-y-2">
                 <p>
-                  By signing in, you agree to our{' '}
+                  <strong>New User?</strong> Use your @godeepak.com email to create an account
+                </p>
+                <p className="text-xs text-slate-500">
+                  By accessing this system, you agree to our{' '}
                   <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
                   {' '}and{' '}
                   <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
