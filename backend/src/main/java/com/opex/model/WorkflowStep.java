@@ -14,12 +14,21 @@ public class WorkflowStep {
     @JoinColumn(name = "initiative_id")
     private Initiative initiative;
 
-    private String stage;
-    private String status; // pending, completed, waiting
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "stage_id")
+    private Stage stage;
+
+    private Integer stepNumber;
+    private String status; // pending, completed, waiting, rejected
     private String approver;
     private LocalDateTime approvalDate;
     private String comments;
-    private String signature; // Base64 encoded signature
+
+    // MOC and CAPEX specific fields
+    private Boolean mocRequired = false;
+    private String mocNumber;
+    private Boolean capexRequired = false;
+    private String capexDetails;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -36,8 +45,11 @@ public class WorkflowStep {
     public Initiative getInitiative() { return initiative; }
     public void setInitiative(Initiative initiative) { this.initiative = initiative; }
 
-    public String getStage() { return stage; }
-    public void setStage(String stage) { this.stage = stage; }
+    public Stage getStage() { return stage; }
+    public void setStage(Stage stage) { this.stage = stage; }
+
+    public Integer getStepNumber() { return stepNumber; }
+    public void setStepNumber(Integer stepNumber) { this.stepNumber = stepNumber; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
@@ -51,12 +63,26 @@ public class WorkflowStep {
     public String getComments() { return comments; }
     public void setComments(String comments) { this.comments = comments; }
 
-    public String getSignature() { return signature; }
-    public void setSignature(String signature) { this.signature = signature; }
+    public Boolean getMocRequired() { return mocRequired; }
+    public void setMocRequired(Boolean mocRequired) { this.mocRequired = mocRequired; }
+
+    public String getMocNumber() { return mocNumber; }
+    public void setMocNumber(String mocNumber) { this.mocNumber = mocNumber; }
+
+    public Boolean getCapexRequired() { return capexRequired; }
+    public void setCapexRequired(Boolean capexRequired) { this.capexRequired = capexRequired; }
+
+    public String getCapexDetails() { return capexDetails; }
+    public void setCapexDetails(String capexDetails) { this.capexDetails = capexDetails; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Helper method to get stage activity for backward compatibility
+    public String getStageName() {
+        return stage != null ? stage.getActivity() : null;
+    }
 }

@@ -4,7 +4,10 @@ import com.opex.config.JwtUtils;
 import com.opex.dto.JwtResponse;
 import com.opex.dto.LoginRequest;
 import com.opex.dto.MessageResponse;
+import com.opex.dto.SignupRequest;
+import com.opex.model.Role;
 import com.opex.model.User;
+import com.opex.service.RoleService;
 import com.opex.service.UserService;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,9 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
+    private RoleService roleService;
+
+    @Autowired
     private JwtUtils jwtUtils;
 
     @PostMapping("/signin")
@@ -35,9 +41,9 @@ public class AuthController {
                     user.getId(),
                     user.getUsername(),
                     user.getEmail(),
-                    user.getName(),
-                    user.getRole(),
-                    user.getSite()));
+                    user.getFullName(),
+                    user.getRoleCode(),
+                    user.getSiteCode()));
         }
         
         return ResponseEntity.badRequest()
@@ -45,7 +51,19 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody User signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        // Validate email domain
+        if (!signUpRequest.getEmail().endsWith("@godeepak.com")) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Email must be from @godeepak.com domain!"));
+        }
+
+        // Validate password confirmation
+        if (!signUpRequest.getPassword().equals(signUpRequest.getConfirmPassword())) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Passwords do not match!"));
+        }
+
         if (userService.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: Username is already taken!"));
@@ -56,12 +74,31 @@ public class AuthController {
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                signUpRequest.getPassword(),
-                signUpRequest.getName(),
-                signUpRequest.getRole() != null ? signUpRequest.getRole() : "TSD",
-                signUpRequest.getSite() != null ? signUpRequest.getSite() : "Manufacturing Plant A");
+        // Get role from database
+        Optional<Role> roleOpt = roleService.findById(signUpRequest.getRoleId());
+        if (!roleOpt.isPresent()) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Invalid role selected!"));
+        }
+
+        Role role = roleOpt.get();
+        
+        // Validate that the role belongs to the selected site
+        if (!role.getSiteCode().equals(signUpRequest.getSiteCode())) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Role does not belong to selected site!"));
+        }
+
+        User user = new User(
+            signUpRequest.getUsername(),
+            signUpRequest.getEmail(),
+            signUpRequest.getPassword(),
+            signUpRequest.getFirstName(),
+            signUpRequest.getLastName(),
+            role,
+            signUpRequest.getSiteCode(),
+            signUpRequest.getSiteName()
+        );
 
         userService.save(user);
 

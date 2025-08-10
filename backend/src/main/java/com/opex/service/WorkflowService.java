@@ -38,7 +38,7 @@ public class WorkflowService {
             step.setStatus("completed");
             step.setApprovalDate(LocalDateTime.now());
             step.setComments(comments);
-            step.setSignature(signature);
+            // step.setSignature(signature); Removed Signature
             step.setUpdatedAt(LocalDateTime.now());
             
             // Move to next step
